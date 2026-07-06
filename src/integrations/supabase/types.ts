@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_aes_config: {
+        Row: {
+          active: boolean
+          allowed_scopes: string[]
+          api_url: string | null
+          id: string
+          last_test_status: string | null
+          last_tested_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          allowed_scopes?: string[]
+          api_url?: string | null
+          id?: string
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          allowed_scopes?: string[]
+          api_url?: string | null
+          id?: string
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_chat_messages: {
         Row: {
           content: string
@@ -272,10 +302,12 @@ export type Database = {
       banners: {
         Row: {
           active: boolean
+          audience: Database["public"]["Enums"]["banner_audience"]
           created_at: string
           cta_label: string | null
           ends_at: string | null
           id: string
+          image_mobile_url: string | null
           image_url: string
           link_url: string | null
           position: string
@@ -283,13 +315,16 @@ export type Database = {
           starts_at: string | null
           subtitle: string | null
           title: string
+          updated_at: string
         }
         Insert: {
           active?: boolean
+          audience?: Database["public"]["Enums"]["banner_audience"]
           created_at?: string
           cta_label?: string | null
           ends_at?: string | null
           id?: string
+          image_mobile_url?: string | null
           image_url: string
           link_url?: string | null
           position?: string
@@ -297,13 +332,16 @@ export type Database = {
           starts_at?: string | null
           subtitle?: string | null
           title: string
+          updated_at?: string
         }
         Update: {
           active?: boolean
+          audience?: Database["public"]["Enums"]["banner_audience"]
           created_at?: string
           cta_label?: string | null
           ends_at?: string | null
           id?: string
+          image_mobile_url?: string | null
           image_url?: string
           link_url?: string | null
           position?: string
@@ -311,35 +349,57 @@ export type Database = {
           starts_at?: string | null
           subtitle?: string | null
           title?: string
+          updated_at?: string
         }
         Relationships: []
       }
       bling_config: {
         Row: {
           access_token: string | null
+          auto_sync_cron: string | null
           client_id: string | null
           expires_at: string | null
+          hide_out_of_stock: boolean
           id: string
+          image_overwrites_manual: boolean
+          last_authorized_at: string | null
+          manual_price_overrides: boolean
           refresh_token: string | null
           scope: string | null
+          sync_prices: boolean
+          sync_stock: boolean
           updated_at: string
         }
         Insert: {
           access_token?: string | null
+          auto_sync_cron?: string | null
           client_id?: string | null
           expires_at?: string | null
+          hide_out_of_stock?: boolean
           id?: string
+          image_overwrites_manual?: boolean
+          last_authorized_at?: string | null
+          manual_price_overrides?: boolean
           refresh_token?: string | null
           scope?: string | null
+          sync_prices?: boolean
+          sync_stock?: boolean
           updated_at?: string
         }
         Update: {
           access_token?: string | null
+          auto_sync_cron?: string | null
           client_id?: string | null
           expires_at?: string | null
+          hide_out_of_stock?: boolean
           id?: string
+          image_overwrites_manual?: boolean
+          last_authorized_at?: string | null
+          manual_price_overrides?: boolean
           refresh_token?: string | null
           scope?: string | null
+          sync_prices?: boolean
+          sync_stock?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -453,6 +513,126 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupon_usages: {
+        Row: {
+          coupon_id: string
+          discount_amount: number
+          id: string
+          order_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          discount_amount: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usages_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          category_id: string | null
+          code: string
+          created_at: string
+          customer_group: string | null
+          description: string | null
+          discount_type: Database["public"]["Enums"]["coupon_discount_type"]
+          discount_value: number
+          ends_at: string | null
+          first_purchase_only: boolean
+          id: string
+          max_discount_value: number | null
+          min_order_value: number | null
+          product_id: string | null
+          starts_at: string | null
+          updated_at: string
+          usage_limit: number | null
+          usage_limit_per_user: number | null
+        }
+        Insert: {
+          active?: boolean
+          category_id?: string | null
+          code: string
+          created_at?: string
+          customer_group?: string | null
+          description?: string | null
+          discount_type: Database["public"]["Enums"]["coupon_discount_type"]
+          discount_value: number
+          ends_at?: string | null
+          first_purchase_only?: boolean
+          id?: string
+          max_discount_value?: number | null
+          min_order_value?: number | null
+          product_id?: string | null
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          usage_limit_per_user?: number | null
+        }
+        Update: {
+          active?: boolean
+          category_id?: string | null
+          code?: string
+          created_at?: string
+          customer_group?: string | null
+          description?: string | null
+          discount_type?: Database["public"]["Enums"]["coupon_discount_type"]
+          discount_value?: number
+          ends_at?: string | null
+          first_purchase_only?: boolean
+          id?: string
+          max_discount_value?: number | null
+          min_order_value?: number | null
+          product_id?: string | null
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+          usage_limit_per_user?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -674,16 +854,23 @@ export type Database = {
           featured: boolean
           hide_when_out_of_stock: boolean
           id: string
+          internal_code: string | null
+          is_bestseller: boolean
           is_new: boolean
           is_offer: boolean
+          min_stock: number
           name: string
           price_b2b: number | null
           price_b2c: number
+          sale_ends_at: string | null
+          sale_price_b2c: number | null
+          sale_starts_at: string | null
           sales_count: number
           short_description: string | null
           sku: string
           slug: string
           stock: number
+          subcategory_id: string | null
           updated_at: string
           weight_kg: number | null
         }
@@ -698,16 +885,23 @@ export type Database = {
           featured?: boolean
           hide_when_out_of_stock?: boolean
           id?: string
+          internal_code?: string | null
+          is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
+          min_stock?: number
           name: string
           price_b2b?: number | null
           price_b2c?: number
+          sale_ends_at?: string | null
+          sale_price_b2c?: number | null
+          sale_starts_at?: string | null
           sales_count?: number
           short_description?: string | null
           sku: string
           slug: string
           stock?: number
+          subcategory_id?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -722,16 +916,23 @@ export type Database = {
           featured?: boolean
           hide_when_out_of_stock?: boolean
           id?: string
+          internal_code?: string | null
+          is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
+          min_stock?: number
           name?: string
           price_b2b?: number | null
           price_b2c?: number
+          sale_ends_at?: string | null
+          sale_price_b2c?: number | null
+          sale_starts_at?: string | null
           sales_count?: number
           short_description?: string | null
           sku?: string
           slug?: string
           stock?: number
+          subcategory_id?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -746,6 +947,13 @@ export type Database = {
           {
             foreignKeyName: "products_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_subcategory_id_fkey"
+            columns: ["subcategory_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
@@ -784,6 +992,82 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          brand_id: string | null
+          category_id: string | null
+          created_at: string
+          customer_group: string | null
+          description: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          ends_at: string | null
+          id: string
+          name: string
+          product_id: string | null
+          promotion_type: Database["public"]["Enums"]["promotion_type"]
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          customer_group?: string | null
+          description?: string | null
+          discount_type: Database["public"]["Enums"]["discount_type"]
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          name: string
+          product_id?: string | null
+          promotion_type: Database["public"]["Enums"]["promotion_type"]
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          customer_group?: string | null
+          description?: string | null
+          discount_type?: Database["public"]["Enums"]["discount_type"]
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          name?: string
+          product_id?: string | null
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_orders: {
         Row: {
@@ -908,6 +1192,8 @@ export type Database = {
         Row: {
           activated_at: string | null
           active: boolean
+          can_create_customer: boolean
+          can_sell_b2b: boolean
           commission_pct: number
           created_at: string
           email: string
@@ -915,6 +1201,7 @@ export type Database = {
           id: string
           invited_at: string
           invited_by: string | null
+          max_discount_pct: number
           notes: string | null
           phone: string | null
           updated_at: string
@@ -923,6 +1210,8 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           active?: boolean
+          can_create_customer?: boolean
+          can_sell_b2b?: boolean
           commission_pct?: number
           created_at?: string
           email: string
@@ -930,6 +1219,7 @@ export type Database = {
           id?: string
           invited_at?: string
           invited_by?: string | null
+          max_discount_pct?: number
           notes?: string | null
           phone?: string | null
           updated_at?: string
@@ -938,6 +1228,8 @@ export type Database = {
         Update: {
           activated_at?: string | null
           active?: boolean
+          can_create_customer?: boolean
+          can_sell_b2b?: boolean
           commission_pct?: number
           created_at?: string
           email?: string
@@ -945,6 +1237,7 @@ export type Database = {
           id?: string
           invited_at?: string
           invited_by?: string | null
+          max_discount_pct?: number
           notes?: string | null
           phone?: string | null
           updated_at?: string
@@ -985,6 +1278,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_b2b_approved: { Args: { _user_id: string }; Returns: boolean }
       is_sales_rep: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
@@ -993,12 +1287,15 @@ export type Database = {
       app_role: "admin" | "gerente" | "vendedor" | "cliente"
       b2b_approval_status: "none" | "pending" | "approved" | "rejected"
       b2b_status: "pendente" | "aprovado" | "reprovado"
+      banner_audience: "all" | "b2c" | "b2b"
+      coupon_discount_type: "percentage" | "fixed_amount"
       customer_group:
         | "b2c"
         | "b2b_pendente"
         | "revendedor"
         | "oficina"
         | "distribuidor"
+      discount_type: "percentage" | "fixed_amount" | "special_price"
       order_status:
         | "rascunho"
         | "aguardando_pagamento"
@@ -1007,6 +1304,7 @@ export type Database = {
         | "enviado"
         | "entregue"
         | "cancelado"
+      promotion_type: "product" | "category" | "brand" | "customer_group"
       sync_entity:
         | "produto"
         | "estoque"
@@ -1146,6 +1444,8 @@ export const Constants = {
       app_role: ["admin", "gerente", "vendedor", "cliente"],
       b2b_approval_status: ["none", "pending", "approved", "rejected"],
       b2b_status: ["pendente", "aprovado", "reprovado"],
+      banner_audience: ["all", "b2c", "b2b"],
+      coupon_discount_type: ["percentage", "fixed_amount"],
       customer_group: [
         "b2c",
         "b2b_pendente",
@@ -1153,6 +1453,7 @@ export const Constants = {
         "oficina",
         "distribuidor",
       ],
+      discount_type: ["percentage", "fixed_amount", "special_price"],
       order_status: [
         "rascunho",
         "aguardando_pagamento",
@@ -1162,6 +1463,7 @@ export const Constants = {
         "entregue",
         "cancelado",
       ],
+      promotion_type: ["product", "category", "brand", "customer_group"],
       sync_entity: [
         "produto",
         "estoque",
