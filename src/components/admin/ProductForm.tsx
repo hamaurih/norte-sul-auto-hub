@@ -261,8 +261,45 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
 
       {tab === "imagens" && (
         <div className="space-y-3">
+          <div
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+            onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files); }}
+            className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-center"
+          >
+            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-sm font-semibold">Arraste imagens aqui ou clique em enviar</p>
+            <p className="mt-1 text-xs text-muted-foreground">JPG, PNG ou WebP · Múltiplos arquivos permitidos</p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-sm font-bold uppercase text-primary-foreground disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploading ? "Enviando..." : "Enviar do computador"}
+              </button>
+              <button
+                type="button"
+                onClick={addImg}
+                className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm"
+              >
+                <Plus className="h-4 w-4" /> Adicionar por URL
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); }}
+            />
+          </div>
           <p className="rounded bg-muted p-3 text-xs text-muted-foreground">
-            Cole a URL da imagem (formato JPG/PNG/WebP). Upload direto ficará disponível ao habilitar buckets públicos em Workspace → Settings → Privacy.
+            💡 Imagens sincronizadas do Bling já aparecem aqui automaticamente após rodar
+            <strong> Ecossistema → Bling → Sincronizar imagens</strong>. Você também pode enviar
+            novas fotos do seu computador ou colar URLs externas.
           </p>
           {(form.images ?? []).map((img, i) => (
             <div key={i} className="flex items-start gap-2 rounded border border-border p-3">
@@ -279,9 +316,11 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
               </div>
             </div>
           ))}
-          <button type="button" onClick={addImg} className="inline-flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 text-sm">
-            <Plus className="h-4 w-4" /> Adicionar imagem
-          </button>
+          {(form.images ?? []).length === 0 && (
+            <div className="rounded border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              Nenhuma imagem adicionada ainda.
+            </div>
+          )}
         </div>
       )}
     </form>
