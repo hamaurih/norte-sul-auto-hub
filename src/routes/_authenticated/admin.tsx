@@ -162,7 +162,7 @@ function B2BList() {
           </div>
           {r.status === "pendente" && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {["revendedor", "oficina", "distribuidor"].map((g) => (
+              {(["revendedor", "oficina", "distribuidor"] as const).map((g) => (
                 <button key={g} onClick={() => decide(r.id, r.user_id, "aprovado", g)} className="rounded bg-success px-3 py-1.5 text-xs font-bold uppercase text-success-foreground hover:brightness-110">
                   Aprovar como {g}
                 </button>
