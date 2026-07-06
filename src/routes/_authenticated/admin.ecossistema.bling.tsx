@@ -173,17 +173,23 @@ function BlingModule() {
     onError: (e: any) => toast.error(e.message ?? "Erro"),
   });
 
+  const [busy, setBusy] = useState<string | null>(null);
   const runSync = (fn: () => Promise<any>, label: string) => async () => {
+    if (busy) return;
+    setBusy(label);
+    toast.info(`${label}: sincronização iniciada. Isso pode levar alguns minutos…`);
     try {
       const r: any = await fn();
       if (r?.ok) toast.success(`${label}: ${r.message}`);
       else toast.error(r?.message ?? `${label} falhou`);
     } catch (e: any) {
-      toast.error(e.message ?? "Erro");
+      toast.error(`${label}: ${e?.message ?? "Erro"}`);
     } finally {
+      setBusy(null);
       invalidateAll();
     }
   };
+
 
   const reprocessMut = useMutation({
     mutationFn: (log_id: string) => reprocessFn({ data: { log_id } }),
@@ -294,6 +300,7 @@ function BlingModule() {
             ]}
             actionLabel="Sincronizar produtos"
             onSync={runSync(syncProducts, "Produtos")}
+            pending={busy === "Produtos"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "produto" && l.status === "erro")}
@@ -310,6 +317,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar imagens"
             onSync={runSync(syncImages, "Imagens")}
+            pending={busy === "Imagens"}
           >
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
@@ -336,6 +344,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar estoque"
             onSync={runSync(syncStock, "Estoque")}
+            pending={busy === "Estoque"}
           >
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
@@ -362,6 +371,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar preços"
             onSync={runSync(syncPrices, "Preços")}
+            pending={busy === "Preços"}
           >
             <Toggle
               label="Bling controla preço B2C"
@@ -395,6 +405,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Enviar pedidos pendentes"
             onSync={runSync(sendOrders, "Pedidos")}
+            pending={busy === "Pedidos"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "pedido" && l.status === "erro")}
@@ -411,6 +422,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar clientes"
             onSync={runSync(syncCustomers, "Clientes")}
+            pending={busy === "Clientes"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "cliente" && l.status === "erro")}
@@ -593,6 +605,7 @@ function SyncCard({
   stats,
   actionLabel,
   onSync,
+  pending,
   children,
 }: {
   title: string;
@@ -601,6 +614,7 @@ function SyncCard({
   stats?: { label: string; value: number }[];
   actionLabel: string;
   onSync: () => void;
+  pending?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -611,8 +625,9 @@ function SyncCard({
           <p className="text-xs text-muted-foreground">{description}</p>
           <p className="mt-1 text-xs text-muted-foreground">Última atualização: {fmt(lastSync)}</p>
         </div>
-        <Button size="sm" onClick={onSync}>
-          <RefreshCcw className="mr-1 h-4 w-4" /> {actionLabel}
+        <Button size="sm" onClick={onSync} disabled={pending}>
+          <RefreshCcw className={`mr-1 h-4 w-4 ${pending ? "animate-spin" : ""}`} />
+          {pending ? "Sincronizando…" : actionLabel}
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -631,6 +646,7 @@ function SyncCard({
     </Card>
   );
 }
+
 
 function ErrorList({ logs, onReprocess }: { logs: BlingLog[]; onReprocess: (id: string) => void }) {
   if (logs.length === 0) return <p className="text-xs text-muted-foreground">Nenhum erro registrado.</p>;

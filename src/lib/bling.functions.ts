@@ -360,12 +360,15 @@ export const syncBlingImages = createServerFn({ method: "POST" })
         .from("products")
         .select("id,bling_id,name")
         .not("bling_id", "is", null)
-        .limit(500);
+        .order("updated_at", { ascending: true, nullsFirst: true })
+        .limit(40);
       let total = 0;
+      let processed = 0;
       for (const prod of prods ?? []) {
         try {
           const det: any = await blingFetch(token, `/produtos/${prod.bling_id}`);
           const imgs: any[] = det?.data?.midia?.imagens?.externas ?? det?.data?.imagens ?? [];
+          processed++;
           if (imgs.length === 0) continue;
           await sb.from("product_images").delete().eq("product_id", prod.id);
           const rows = imgs.map((img: any, idx: number) => ({
@@ -376,6 +379,7 @@ export const syncBlingImages = createServerFn({ method: "POST" })
             is_primary: idx === 0,
           }));
           await sb.from("product_images").insert(rows);
+          await sb.from("products").update({ updated_at: new Date().toISOString() }).eq("id", prod.id);
           total += rows.length;
         } catch (err: any) {
           await log(sb, {
@@ -387,9 +391,10 @@ export const syncBlingImages = createServerFn({ method: "POST" })
           });
         }
       }
-      const msg = `Sincronizadas ${total} imagens.`;
+      const msg = `Processados ${processed} produtos · ${total} imagens salvas. Clique novamente para continuar o próximo lote.`;
       await log(sb, { entity: "imagem", action: "sync_all", status: "sucesso", message: msg });
       return { ok: true, message: msg };
+
     } catch (e: any) {
       await log(sb, {
         entity: "imagem",
