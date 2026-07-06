@@ -21,6 +21,7 @@ import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 import { Route as AuthenticatedVendedorRouteImport } from './routes/_authenticated/vendedor'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedVendedorIndexRouteImport } from './routes/_authenticated/vendedor.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './routes/_authenticated/vendedor.pedido-assistido'
@@ -88,6 +89,11 @@ const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   path: '/conta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedVendedorIndexRoute =
   AuthenticatedVendedorIndexRouteImport.update({
     id: '/',
@@ -95,9 +101,9 @@ const AuthenticatedVendedorIndexRoute =
     getParentRoute: () => AuthenticatedVendedorRoute,
   } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedVendedorPedidoAssistidoRoute =
   AuthenticatedVendedorPedidoAssistidoRouteImport.update({
@@ -119,9 +125,9 @@ const AuthenticatedVendedorClientesRoute =
   } as any)
 const AuthenticatedAdminVendedoresRoute =
   AuthenticatedAdminVendedoresRouteImport.update({
-    id: '/admin/vendedores',
-    path: '/admin/vendedores',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/vendedores',
+    path: '/vendedores',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminVendedoresNovoRoute =
   AuthenticatedAdminVendedoresNovoRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
@@ -179,6 +186,7 @@ export interface FileRoutesById {
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
@@ -201,6 +209,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/checkout'
     | '/sitemap.xml'
+    | '/admin'
     | '/conta'
     | '/pedidos'
     | '/vendedor'
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/checkout'
     | '/sitemap.xml'
+    | '/_authenticated/admin'
     | '/_authenticated/conta'
     | '/_authenticated/pedidos'
     | '/_authenticated/vendedor'
@@ -352,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/vendedor/': {
       id: '/_authenticated/vendedor/'
       path: '/'
@@ -361,10 +378,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/vendedor/pedido-assistido': {
       id: '/_authenticated/vendedor/pedido-assistido'
@@ -389,10 +406,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/vendedores': {
       id: '/_authenticated/admin/vendedores'
-      path: '/admin/vendedores'
+      path: '/vendedores'
       fullPath: '/admin/vendedores'
       preLoaderRoute: typeof AuthenticatedAdminVendedoresRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/vendedores/novo': {
       id: '/_authenticated/admin/vendedores/novo'
@@ -403,6 +420,35 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminVendedoresRouteChildren {
+  AuthenticatedAdminVendedoresNovoRoute: typeof AuthenticatedAdminVendedoresNovoRoute
+}
+
+const AuthenticatedAdminVendedoresRouteChildren: AuthenticatedAdminVendedoresRouteChildren =
+  {
+    AuthenticatedAdminVendedoresNovoRoute:
+      AuthenticatedAdminVendedoresNovoRoute,
+  }
+
+const AuthenticatedAdminVendedoresRouteWithChildren =
+  AuthenticatedAdminVendedoresRoute._addFileChildren(
+    AuthenticatedAdminVendedoresRouteChildren,
+  )
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminVendedoresRoute:
+    AuthenticatedAdminVendedoresRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedVendedorRouteChildren {
   AuthenticatedVendedorClientesRoute: typeof AuthenticatedVendedorClientesRoute
@@ -424,36 +470,18 @@ const AuthenticatedVendedorRouteWithChildren =
     AuthenticatedVendedorRouteChildren,
   )
 
-interface AuthenticatedAdminVendedoresRouteChildren {
-  AuthenticatedAdminVendedoresNovoRoute: typeof AuthenticatedAdminVendedoresNovoRoute
-}
-
-const AuthenticatedAdminVendedoresRouteChildren: AuthenticatedAdminVendedoresRouteChildren =
-  {
-    AuthenticatedAdminVendedoresNovoRoute:
-      AuthenticatedAdminVendedoresNovoRoute,
-  }
-
-const AuthenticatedAdminVendedoresRouteWithChildren =
-  AuthenticatedAdminVendedoresRoute._addFileChildren(
-    AuthenticatedAdminVendedoresRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedVendedorRoute: typeof AuthenticatedVendedorRouteWithChildren
-  AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedContaRoute: AuthenticatedContaRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedVendedorRoute: AuthenticatedVendedorRouteWithChildren,
-  AuthenticatedAdminVendedoresRoute:
-    AuthenticatedAdminVendedoresRouteWithChildren,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
