@@ -40,7 +40,7 @@ function B2BList() {
   });
 
   async function decide(regId: string, userId: string, status: "aprovado" | "reprovado", group?: "revendedor" | "oficina" | "distribuidor") {
-    const updates: Record<string, unknown> = { status, reviewed_at: new Date().toISOString() };
+    const updates: { status: "aprovado" | "reprovado"; reviewed_at: string; admin_notes?: string } = { status, reviewed_at: new Date().toISOString() };
     if (notes) updates.admin_notes = notes;
     await supabase.from("b2b_registrations").update(updates).eq("id", regId);
     if (status === "aprovado" && group) {

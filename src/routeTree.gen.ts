@@ -28,6 +28,7 @@ import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './rout
 import { Route as AuthenticatedVendedorMeusPedidosRouteImport } from './routes/_authenticated/vendedor.meus-pedidos'
 import { Route as AuthenticatedVendedorClientesRouteImport } from './routes/_authenticated/vendedor.clientes'
 import { Route as AuthenticatedAdminVendedoresRouteImport } from './routes/_authenticated/admin.vendedores'
+import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_authenticated/admin.cadastros-b2b'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -129,6 +130,12 @@ const AuthenticatedAdminVendedoresRoute =
     path: '/vendedores',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCadastrosB2bRoute =
+  AuthenticatedAdminCadastrosB2bRouteImport.update({
+    id: '/cadastros-b2b',
+    path: '/cadastros-b2b',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminVendedoresNovoRoute =
   AuthenticatedAdminVendedoresNovoRouteImport.update({
     id: '/novo',
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -168,6 +176,7 @@ export interface FileRoutesByTo {
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -191,6 +200,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/_authenticated/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/_authenticated/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/_authenticated/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/vendedor'
     | '/produto/$slug'
+    | '/admin/cadastros-b2b'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/pedidos'
     | '/produto/$slug'
+    | '/admin/cadastros-b2b'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/vendedor'
     | '/produto/$slug'
+    | '/_authenticated/admin/cadastros-b2b'
     | '/_authenticated/admin/vendedores'
     | '/_authenticated/vendedor/clientes'
     | '/_authenticated/vendedor/meus-pedidos'
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVendedoresRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cadastros-b2b': {
+      id: '/_authenticated/admin/cadastros-b2b'
+      path: '/cadastros-b2b'
+      fullPath: '/admin/cadastros-b2b'
+      preLoaderRoute: typeof AuthenticatedAdminCadastrosB2bRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/vendedores/novo': {
       id: '/_authenticated/admin/vendedores/novo'
       path: '/novo'
@@ -437,11 +457,13 @@ const AuthenticatedAdminVendedoresRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCadastrosB2bRoute: typeof AuthenticatedAdminCadastrosB2bRoute
   AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCadastrosB2bRoute: AuthenticatedAdminCadastrosB2bRoute,
   AuthenticatedAdminVendedoresRoute:
     AuthenticatedAdminVendedoresRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
