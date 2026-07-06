@@ -10,6 +10,7 @@ export interface SessionState {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;
   isStaff: boolean;
   isSalesRep: boolean;
   isB2BApproved: boolean;
@@ -23,6 +24,7 @@ const empty: SessionState = {
   user: null,
   session: null,
   loading: true,
+  isAdmin: false,
   isStaff: false,
   isSalesRep: false,
   isB2BApproved: false,
@@ -51,6 +53,7 @@ export function useSession(): SessionState {
       const customerGroup = (profile?.customer_group ?? "b2c") as CustomerGroup;
       const b2bStatus = (profile?.b2b_status ?? "none") as B2BStatus;
       const isStaff = roles.some((r) => r === "admin" || r === "gerente");
+      const isAdmin = roles.some((r) => r === "admin");
       const isSalesRep = roles.some((r) => r === "vendedor");
       const b2bGroup = ["revendedor", "oficina", "distribuidor"].includes(customerGroup);
       if (!cancelled)
@@ -58,6 +61,7 @@ export function useSession(): SessionState {
           user: session.user,
           session,
           loading: false,
+          isAdmin,
           isStaff,
           isSalesRep,
           isB2BApproved: isStaff || (b2bGroup && b2bStatus === "approved"),
