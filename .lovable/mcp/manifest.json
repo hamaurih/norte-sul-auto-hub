@@ -15,7 +15,7 @@
       {
         "name": "search_products",
         "title": "Search products",
-        "description": "Search the public product catalog by name or description. Returns active products with price, stock, and slug.",
+        "description": "Search the public product catalog by name or description. Returns active products with prices, stock and slug.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
