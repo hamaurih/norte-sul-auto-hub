@@ -199,6 +199,48 @@ export async function fetchRelated(categorySlug: string | null, excludeId: strin
   return (data as unknown as ProductRow[]) ?? [];
 }
 
+export interface SearchSuggestion {
+  id: string;
+  sku: string;
+  name: string;
+  slug: string;
+  price_b2c: number;
+  image: string | null;
+}
+
+export async function fetchSearchSuggestions(term: string, limit = 8): Promise<SearchSuggestion[]> {
+  const q = term.trim();
+  if (q.length < 2) return [];
+  // Escape PostgREST reserved chars in the .or() filter to avoid syntax errors
+  const safe = q.replace(/[,()]/g, " ");
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, sku, name, slug, price_b2c, images:product_images(url, is_primary, sort_order)")
+    .eq("active", true)
+    .or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`)
+    .order("sales_count", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.error("Erro na busca rápida", error);
+    return [];
+  }
+  return (data ?? []).map((p: {
+    id: string; sku: string; name: string; slug: string; price_b2c: number;
+    images: { url: string; is_primary: boolean; sort_order: number }[] | null;
+  }) => {
+    const imgs = (p.images ?? []).slice().sort(
+      (a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order,
+    );
+    return {
+      id: p.id,
+      sku: p.sku,
+      name: p.name,
+      slug: p.slug,
+      price_b2c: p.price_b2c,
+      image: imgs[0]?.url ?? null,
+    };
+  });
+
 export async function fetchCategories() {
   const { data } = await supabase.from("categories").select("id, name, slug, icon, sort_order").eq("active", true).order("sort_order");
   return data ?? [];
