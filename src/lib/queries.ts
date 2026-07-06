@@ -170,7 +170,7 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
 export async function fetchProductBySlug(slug: string): Promise<ProductRow | null> {
   const { data, error } = await supabase
     .from("products")
-    .select(PRODUCT_LIST_SELECT)
+    .select(PRODUCT_SELECT)
     .eq("slug", slug)
     .eq("active", true)
     .maybeSingle();
