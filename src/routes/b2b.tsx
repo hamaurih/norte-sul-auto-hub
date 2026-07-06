@@ -57,7 +57,7 @@ function B2BPage() {
     }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0]?.message ?? "Verifique os dados");
+      toast.error(parsed.error.issues[0]?.message ?? "Verifique os dados");
       return;
     }
     setLoading(true);
