@@ -1,0 +1,263 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { productUpsert, type ProductInput } from "@/lib/products.functions";
+import { slugify } from "@/lib/format";
+import { Trash2, ArrowUp, ArrowDown, Star, Plus } from "lucide-react";
+
+type Img = { url: string; alt?: string | null; is_primary?: boolean };
+
+function toInput(v: string | null | undefined) {
+  return v ? v.slice(0, 16) : "";
+}
+
+export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { id?: string; images?: Img[] } }) {
+  const navigate = useNavigate();
+  const upsert = useServerFn(productUpsert);
+  const [tab, setTab] = useState<"geral" | "precos" | "estoque" | "imagens">("geral");
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<ProductInput>({
+    id: initial?.id ?? null,
+    sku: initial?.sku ?? "",
+    internal_code: initial?.internal_code ?? "",
+    name: initial?.name ?? "",
+    slug: initial?.slug ?? "",
+    short_description: initial?.short_description ?? "",
+    description: initial?.description ?? "",
+    brand_id: initial?.brand_id ?? null,
+    category_id: initial?.category_id ?? null,
+    subcategory_id: initial?.subcategory_id ?? null,
+    price_b2c: Number(initial?.price_b2c ?? 0),
+    price_b2b: initial?.price_b2b ?? null,
+    compare_at_price: initial?.compare_at_price ?? null,
+    sale_price_b2c: initial?.sale_price_b2c ?? null,
+    sale_starts_at: initial?.sale_starts_at ?? null,
+    sale_ends_at: initial?.sale_ends_at ?? null,
+    stock: initial?.stock ?? 0,
+    min_stock: initial?.min_stock ?? 0,
+    hide_when_out_of_stock: initial?.hide_when_out_of_stock ?? false,
+    active: initial?.active ?? true,
+    featured: initial?.featured ?? false,
+    is_new: initial?.is_new ?? false,
+    is_bestseller: initial?.is_bestseller ?? false,
+    is_offer: initial?.is_offer ?? false,
+    weight_kg: initial?.weight_kg ?? null,
+    images: initial?.images ?? [],
+  });
+
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands-all"],
+    queryFn: async () => (await supabase.from("brands").select("id,name").order("name")).data ?? [],
+  });
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories-all"],
+    queryFn: async () =>
+      (await supabase.from("categories").select("id,name,parent_id").order("name")).data ?? [],
+  });
+  const parentCats = categories.filter((c) => !c.parent_id);
+  const subCats = categories.filter((c) => c.parent_id === form.category_id);
+
+  function update<K extends keyof ProductInput>(key: K, value: ProductInput[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function updateImg(i: number, patch: Partial<Img>) {
+    setForm((f) => {
+      const imgs = [...(f.images ?? [])];
+      imgs[i] = { ...imgs[i], ...patch };
+      return { ...f, images: imgs };
+    });
+  }
+  function addImg() {
+    setForm((f) => ({ ...f, images: [...(f.images ?? []), { url: "", alt: "", is_primary: (f.images ?? []).length === 0 }] }));
+  }
+  function removeImg(i: number) {
+    setForm((f) => ({ ...f, images: (f.images ?? []).filter((_, idx) => idx !== i) }));
+  }
+  function moveImg(i: number, dir: -1 | 1) {
+    setForm((f) => {
+      const imgs = [...(f.images ?? [])];
+      const j = i + dir;
+      if (j < 0 || j >= imgs.length) return f;
+      [imgs[i], imgs[j]] = [imgs[j], imgs[i]];
+      return { ...f, images: imgs };
+    });
+  }
+  function setPrimary(i: number) {
+    setForm((f) => ({ ...f, images: (f.images ?? []).map((img, idx) => ({ ...img, is_primary: idx === i })) }));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload: ProductInput = {
+        ...form,
+        slug: form.slug || slugify(form.name),
+        images: (form.images ?? []).filter((i) => i.url.trim().length > 0),
+      };
+      const res = await upsert({ data: payload });
+      toast.success(form.id ? "Produto atualizado" : "Produto criado");
+      if (!form.id && res.id) navigate({ to: "/admin/produtos/$id", params: { id: res.id } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const tabs = [
+    { id: "geral", label: "Geral" },
+    { id: "precos", label: "Preços & Promoção" },
+    { id: "estoque", label: "Estoque" },
+    { id: "imagens", label: "Imagens" },
+  ] as const;
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`border-b-2 px-3 py-2 text-sm font-bold uppercase ${
+              tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+        <div className="ml-auto flex items-center gap-2">
+          <button type="submit" disabled={saving} className="rounded bg-primary px-4 py-2 text-sm font-bold uppercase text-primary-foreground disabled:opacity-50">
+            {saving ? "Salvando..." : form.id ? "Salvar alterações" : "Criar produto"}
+          </button>
+        </div>
+      </div>
+
+      {tab === "geral" && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <L label="SKU *"><input required value={form.sku} onChange={(e) => update("sku", e.target.value)} className={inp} /></L>
+          <L label="Código interno"><input value={form.internal_code ?? ""} onChange={(e) => update("internal_code", e.target.value)} className={inp} /></L>
+          <L label="Nome *" full>
+            <input
+              required
+              value={form.name}
+              onChange={(e) => {
+                update("name", e.target.value);
+                if (!form.id && !form.slug) update("slug", slugify(e.target.value));
+              }}
+              className={inp}
+            />
+          </L>
+          <L label="Slug (URL)"><input value={form.slug} onChange={(e) => update("slug", slugify(e.target.value))} className={inp} /></L>
+          <L label="Marca">
+            <select value={form.brand_id ?? ""} onChange={(e) => update("brand_id", e.target.value || null)} className={inp}>
+              <option value="">—</option>
+              {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </L>
+          <L label="Categoria">
+            <select value={form.category_id ?? ""} onChange={(e) => { update("category_id", e.target.value || null); update("subcategory_id", null); }} className={inp}>
+              <option value="">—</option>
+              {parentCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </L>
+          <L label="Subcategoria">
+            <select value={form.subcategory_id ?? ""} onChange={(e) => update("subcategory_id", e.target.value || null)} className={inp} disabled={subCats.length === 0}>
+              <option value="">—</option>
+              {subCats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </L>
+          <L label="Descrição curta" full>
+            <input value={form.short_description ?? ""} onChange={(e) => update("short_description", e.target.value)} className={inp} maxLength={200} />
+          </L>
+          <L label="Descrição completa" full>
+            <textarea value={form.description ?? ""} onChange={(e) => update("description", e.target.value)} rows={6} className={inp} />
+          </L>
+          <div className="md:col-span-2 flex flex-wrap gap-4 rounded border border-border p-3">
+            <Chk label="Ativo" checked={form.active ?? true} onChange={(v) => update("active", v)} />
+            <Chk label="Destaque" checked={form.featured ?? false} onChange={(v) => update("featured", v)} />
+            <Chk label="Lançamento" checked={form.is_new ?? false} onChange={(v) => update("is_new", v)} />
+            <Chk label="Mais vendido" checked={form.is_bestseller ?? false} onChange={(v) => update("is_bestseller", v)} />
+            <Chk label="Oferta" checked={form.is_offer ?? false} onChange={(v) => update("is_offer", v)} />
+          </div>
+        </div>
+      )}
+
+      {tab === "precos" && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <L label="Preço B2C *"><input required type="number" step="0.01" value={form.price_b2c} onChange={(e) => update("price_b2c", Number(e.target.value))} className={inp} /></L>
+          <L label="Preço B2B"><input type="number" step="0.01" value={form.price_b2b ?? ""} onChange={(e) => update("price_b2b", e.target.value ? Number(e.target.value) : null)} className={inp} /></L>
+          <L label="Preço 'de' (comparação)"><input type="number" step="0.01" value={form.compare_at_price ?? ""} onChange={(e) => update("compare_at_price", e.target.value ? Number(e.target.value) : null)} className={inp} /></L>
+          <L label="Preço promocional B2C"><input type="number" step="0.01" value={form.sale_price_b2c ?? ""} onChange={(e) => update("sale_price_b2c", e.target.value ? Number(e.target.value) : null)} className={inp} /></L>
+          <L label="Promoção — início">
+            <input type="datetime-local" value={toInput(form.sale_starts_at)} onChange={(e) => update("sale_starts_at", e.target.value ? new Date(e.target.value).toISOString() : null)} className={inp} />
+          </L>
+          <L label="Promoção — fim">
+            <input type="datetime-local" value={toInput(form.sale_ends_at)} onChange={(e) => update("sale_ends_at", e.target.value ? new Date(e.target.value).toISOString() : null)} className={inp} />
+          </L>
+        </div>
+      )}
+
+      {tab === "estoque" && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <L label="Estoque"><input type="number" value={form.stock} onChange={(e) => update("stock", Number(e.target.value))} className={inp} /></L>
+          <L label="Estoque mínimo (alerta)"><input type="number" value={form.min_stock ?? 0} onChange={(e) => update("min_stock", Number(e.target.value))} className={inp} /></L>
+          <L label="Peso (kg)"><input type="number" step="0.001" value={form.weight_kg ?? ""} onChange={(e) => update("weight_kg", e.target.value ? Number(e.target.value) : null)} className={inp} /></L>
+          <div className="md:col-span-2">
+            <Chk label="Ocultar quando esgotado" checked={form.hide_when_out_of_stock ?? false} onChange={(v) => update("hide_when_out_of_stock", v)} />
+          </div>
+        </div>
+      )}
+
+      {tab === "imagens" && (
+        <div className="space-y-3">
+          <p className="rounded bg-muted p-3 text-xs text-muted-foreground">
+            Cole a URL da imagem (formato JPG/PNG/WebP). Upload direto ficará disponível ao habilitar buckets públicos em Workspace → Settings → Privacy.
+          </p>
+          {(form.images ?? []).map((img, i) => (
+            <div key={i} className="flex items-start gap-2 rounded border border-border p-3">
+              <img src={img.url || "/placeholder.svg"} alt="" className="h-16 w-16 rounded object-cover bg-muted" />
+              <div className="flex-1 space-y-2">
+                <input placeholder="https://..." value={img.url} onChange={(e) => updateImg(i, { url: e.target.value })} className={inp} />
+                <input placeholder="Texto alternativo (alt)" value={img.alt ?? ""} onChange={(e) => updateImg(i, { alt: e.target.value })} className={inp} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <button type="button" title="Principal" onClick={() => setPrimary(i)} className={`rounded p-1 ${img.is_primary ? "bg-primary text-primary-foreground" : "bg-muted"}`}><Star className="h-4 w-4" /></button>
+                <button type="button" onClick={() => moveImg(i, -1)} className="rounded bg-muted p-1"><ArrowUp className="h-4 w-4" /></button>
+                <button type="button" onClick={() => moveImg(i, 1)} className="rounded bg-muted p-1"><ArrowDown className="h-4 w-4" /></button>
+                <button type="button" onClick={() => removeImg(i)} className="rounded bg-destructive p-1 text-destructive-foreground"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={addImg} className="inline-flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 text-sm">
+            <Plus className="h-4 w-4" /> Adicionar imagem
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
+
+const inp = "w-full rounded border border-border bg-background p-2 text-sm";
+
+function L({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <label className={`block text-sm ${full ? "md:col-span-2" : ""}`}>
+      <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">{label}</span>
+      {children}
+    </label>
+  );
+}
+function Chk({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="inline-flex items-center gap-2 text-sm">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
