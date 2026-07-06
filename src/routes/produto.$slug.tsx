@@ -69,7 +69,7 @@ function ProductPage() {
         {/* Gallery */}
         <div className="grid gap-3 sm:grid-cols-[80px_1fr]">
           <div className="order-2 flex gap-2 sm:order-1 sm:flex-col">
-            {images.map((im, i) => (
+            {images.map((im: { url: string }, i: number) => (
               <button
                 key={im.url}
                 onClick={() => setImgIdx(i)}
@@ -184,7 +184,7 @@ function ProductPage() {
                 <li key={i} className="rounded bg-muted px-3 py-2">
                   <b>{a.vehicle_make} {a.vehicle_model}</b>
                   {a.year_from && a.year_to && <> · {a.year_from}–{a.year_to}</>}
-                  {a.notes && <span className="ml-2 text-muted-foreground">{a.notes}</span>}
+                  {"notes" in a && a.notes && <span className="ml-2 text-muted-foreground">{String(a.notes)}</span>}
                 </li>
               ))}
             </ul>
