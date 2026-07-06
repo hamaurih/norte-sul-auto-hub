@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, Zap } from "lucide-react";
+import { ShoppingCart, Zap, Car } from "lucide-react";
 import { brl } from "@/lib/format";
 import { cartStore } from "@/lib/cart-store";
 import { displayPrice, primaryImage, type ProductRow } from "@/lib/queries";
