@@ -17,6 +17,7 @@ import {
   Bot,
   Settings,
   ShieldAlert,
+  Network,
 } from "lucide-react";
 import {
   Sidebar,
@@ -66,6 +67,7 @@ const items: Item[] = [
   { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "marketing" },
   { to: "/admin/banners", label: "Banners", icon: ImageIcon, group: "marketing" },
 
+  { to: "/admin/ecossistema", label: "Ecossistema", icon: Network, group: "integracoes", adminOnly: true },
   { to: "/admin/bling", label: "Bling", icon: RefreshCcw, group: "integracoes", adminOnly: true },
   { to: "/admin/ia-aes-business", label: "IA A&S Business", icon: Bot, group: "integracoes", adminOnly: true },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "integracoes", adminOnly: true },

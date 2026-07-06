@@ -637,6 +637,124 @@ export type Database = {
           },
         ]
       }
+      integration_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          external_id: string | null
+          id: string
+          integration_id: string
+          message: string | null
+          payload: Json | null
+          status: Database["public"]["Enums"]["integration_log_status"]
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          external_id?: string | null
+          id?: string
+          integration_id: string
+          message?: string | null
+          payload?: Json | null
+          status?: Database["public"]["Enums"]["integration_log_status"]
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          external_id?: string | null
+          id?: string
+          integration_id?: string
+          message?: string | null
+          payload?: Json | null
+          status?: Database["public"]["Enums"]["integration_log_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_settings: {
+        Row: {
+          created_at: string
+          id: string
+          integration_id: string
+          is_secret: boolean
+          key: string
+          updated_at: string
+          value_encrypted: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          integration_id: string
+          is_secret?: boolean
+          key: string
+          updated_at?: string
+          value_encrypted?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          integration_id?: string
+          is_secret?: boolean
+          key?: string
+          updated_at?: string
+          value_encrypted?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_settings_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["integration_category"]
+          created_at: string
+          description: string | null
+          id: string
+          last_sync_at: string | null
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["integration_status"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: Database["public"]["Enums"]["integration_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_sync_at?: string | null
+          name: string
+          slug: string
+          status?: Database["public"]["Enums"]["integration_status"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["integration_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_sync_at?: string | null
+          name?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["integration_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -1286,6 +1404,17 @@ export type Database = {
         | "oficina"
         | "distribuidor"
       discount_type: "percentage" | "fixed_amount" | "special_price"
+      integration_category:
+        | "erp"
+        | "marketplace"
+        | "logistics"
+        | "payment"
+        | "fiscal"
+        | "ai"
+        | "marketing"
+        | "mobile"
+      integration_log_status: "success" | "error" | "warning" | "pending"
+      integration_status: "disconnected" | "connected" | "error" | "configuring"
       order_status:
         | "rascunho"
         | "aguardando_pagamento"
@@ -1444,6 +1573,18 @@ export const Constants = {
         "distribuidor",
       ],
       discount_type: ["percentage", "fixed_amount", "special_price"],
+      integration_category: [
+        "erp",
+        "marketplace",
+        "logistics",
+        "payment",
+        "fiscal",
+        "ai",
+        "marketing",
+        "mobile",
+      ],
+      integration_log_status: ["success", "error", "warning", "pending"],
+      integration_status: ["disconnected", "connected", "error", "configuring"],
       order_status: [
         "rascunho",
         "aguardando_pagamento",
