@@ -1,25 +1,80 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Search, ShoppingCart, User, Wrench, Menu, LogOut } from "lucide-react";
-import { useState } from "react";
+import { Search, ShoppingCart, User, Wrench, Menu, LogOut, Car, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCategories } from "@/lib/queries";
+import { fetchCategories, fetchSearchSuggestions } from "@/lib/queries";
 import { useCart } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
+import { brl } from "@/lib/format";
 import logo from "@/assets/norte-sul-logo.png.asset.json";
 
 export function Header() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(-1);
   const [menuOpen, setMenuOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement | null>(null);
   const { count } = useCart();
   const { user, isStaff, isSalesRep, isB2BApproved } = useSession();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
 
+  // Debounce term (250ms)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(q.trim()), 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const enabled = debounced.length >= 2;
+  const { data: suggestions = [], isFetching } = useQuery({
+    queryKey: ["search-suggestions", debounced],
+    queryFn: () => fetchSearchSuggestions(debounced, 8),
+    enabled,
+    staleTime: 30_000,
+  });
+
+  // Click outside closes dropdown
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!boxRef.current) return;
+      if (!boxRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  function goToCatalog(term: string) {
+    setOpen(false);
+    navigate({ to: "/catalogo", search: { q: term } as never });
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    navigate({ to: "/catalogo", search: { q } as never });
+    if (highlight >= 0 && suggestions[highlight]) {
+      const s = suggestions[highlight];
+      setOpen(false);
+      navigate({ to: "/produto/$slug", params: { slug: s.slug } });
+      return;
+    }
+    goToCatalog(q);
   }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlight((h) => Math.min(h + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, -1));
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
+  const showDropdown = open && enabled && (isFetching || suggestions.length > 0);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-secondary text-secondary-foreground">
@@ -55,20 +110,82 @@ export function Header() {
           />
         </Link>
 
-        <form onSubmit={submit} className="ml-auto flex flex-1 max-w-2xl items-center rounded-md bg-white text-foreground">
-          <div className="hidden items-center gap-1 border-r border-border px-3 text-xs font-semibold text-muted-foreground sm:flex">
-            <span>SKU · Produto · Marca · Aplicação</span>
-          </div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Busque por SKU, produto, marca, aplicação ou modelo do carro"
-            className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-          />
-          <button className="grid h-full aspect-square place-items-center rounded-r-md bg-primary px-3 text-primary-foreground" aria-label="Buscar">
-            <Search className="h-4 w-4" />
-          </button>
-        </form>
+        <div ref={boxRef} className="relative ml-auto flex flex-1 max-w-2xl">
+          <form onSubmit={submit} className="flex w-full items-center rounded-md bg-white text-foreground">
+            <div className="hidden items-center gap-1 border-r border-border px-3 text-xs font-semibold text-muted-foreground sm:flex">
+              <span>SKU · Produto · Marca · Aplicação</span>
+            </div>
+            <input
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setOpen(true);
+                setHighlight(-1);
+              }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={onKeyDown}
+              placeholder="Busque por SKU, produto, marca, aplicação ou modelo do carro"
+              className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+              autoComplete="off"
+            />
+            <button className="grid h-full aspect-square place-items-center rounded-r-md bg-primary px-3 text-primary-foreground" aria-label="Buscar">
+              {isFetching && enabled ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            </button>
+          </form>
+
+          {showDropdown && (
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-border bg-white text-foreground shadow-2xl">
+              {suggestions.length === 0 && isFetching ? (
+                <div className="px-3 py-4 text-center text-xs text-muted-foreground">Buscando…</div>
+              ) : (
+                <>
+                  <ul className="max-h-[70vh] overflow-y-auto">
+                    {suggestions.map((s, idx) => (
+                      <li key={s.id}>
+                        <Link
+                          to="/produto/$slug"
+                          params={{ slug: s.slug }}
+                          onClick={() => {
+                            setOpen(false);
+                            setQ("");
+                          }}
+                          onMouseEnter={() => setHighlight(idx)}
+                          className={`flex items-center gap-3 px-3 py-2 text-left transition ${
+                            idx === highlight ? "bg-primary/10" : "hover:bg-muted"
+                          }`}
+                        >
+                          <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded bg-muted">
+                            {s.image ? (
+                              <img
+                                src={s.image}
+                                alt=""
+                                loading="lazy"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Car className="h-5 w-5 text-muted-foreground/50" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="line-clamp-2 text-xs font-medium leading-tight">{s.name}</div>
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">SKU {s.sku}</div>
+                          </div>
+                          <div className="shrink-0 text-sm font-bold text-primary">{brl(s.price_b2c)}</div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => goToCatalog(q)}
+                    className="block w-full border-t border-border bg-muted/50 px-3 py-2 text-center text-xs font-bold uppercase tracking-wider text-primary hover:bg-muted"
+                  >
+                    Ver todos os resultados para “{q}”
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
 
         <nav className="ml-auto flex items-center gap-1">
           {user ? (
