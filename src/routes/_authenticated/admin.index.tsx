@@ -7,7 +7,7 @@ import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { LayoutDashboard, Users, Package, ShoppingBag, Image as ImageIcon, RefreshCcw, ShieldAlert } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({ meta: [{ title: "Admin · Norte Sul" }] }),
   beforeLoad: async () => {
     const { data: userRes } = await supabase.auth.getUser();
