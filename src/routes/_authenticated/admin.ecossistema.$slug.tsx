@@ -297,7 +297,7 @@ function IntegrationDetail() {
   const spec = specs[slug] ?? { fields: [] };
   const s = statusMeta[integration.status];
   const valueFor = (key: string) => settings?.find((x) => x.key === key)?.value_encrypted ?? "";
-  const isSecretFilled = (key: string, is_secret?: boolean) => is_secret && !!valueFor(key);
+  const isSecretFilled = (key: string, is_secret?: boolean) => !!is_secret && !!valueFor(key);
 
   return (
     <div className="space-y-4">
