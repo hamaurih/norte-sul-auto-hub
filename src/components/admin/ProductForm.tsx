@@ -90,6 +90,51 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
     setForm((f) => ({ ...f, images: (f.images ?? []).map((img, idx) => ({ ...img, is_primary: idx === i })) }));
   }
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadFiles(files: FileList | File[]) {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (arr.length === 0) {
+      toast.error("Selecione arquivos de imagem");
+      return;
+    }
+    setUploading(true);
+    try {
+      const bucket = supabase.storage.from("product-images");
+      const uploaded: Img[] = [];
+      for (const file of arr) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${form.sku || "novo"}/${crypto.randomUUID()}.${ext}`;
+        const up = await bucket.upload(path, file, {
+          contentType: file.type,
+          cacheControl: "31536000",
+          upsert: false,
+        });
+        if (up.error) throw up.error;
+        // Long-lived signed URL (10 years) — works while bucket is private.
+        const signed = await bucket.createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signed.error) throw signed.error;
+        uploaded.push({ url: signed.data.signedUrl, alt: file.name, is_primary: false });
+      }
+      setForm((f) => {
+        const existing = f.images ?? [];
+        const merged = [...existing, ...uploaded];
+        // Se não havia principal, primeira nova vira principal
+        if (!existing.some((i) => i.is_primary) && merged.length > 0) {
+          merged[0] = { ...merged[0], is_primary: true };
+        }
+        return { ...f, images: merged };
+      });
+      toast.success(`${uploaded.length} imagem(ns) enviada(s)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha no upload");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
