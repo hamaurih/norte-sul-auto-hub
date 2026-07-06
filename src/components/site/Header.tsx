@@ -62,7 +62,7 @@ export function Header() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Busque por som, farol LED, Gol 2020…"
+            placeholder="Busque por SKU, produto, marca, aplicação ou modelo do carro"
             className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
           />
           <button className="grid h-full aspect-square place-items-center rounded-r-md bg-primary px-3 text-primary-foreground" aria-label="Buscar">
