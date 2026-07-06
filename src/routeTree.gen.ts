@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
@@ -22,6 +23,8 @@ import { Route as AuthenticatedVendedorRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedVendedorIndexRouteImport } from './routes/_authenticated/vendedor.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './routes/_authenticated/vendedor.pedido-assistido'
@@ -40,6 +43,7 @@ import { Route as AuthenticatedAdminCategoriasRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_authenticated/admin.cadastros-b2b'
 import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authenticated/admin.bling'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 import { Route as AuthenticatedAdminProdutosNovoRouteImport } from './routes/_authenticated/admin.produtos.novo'
 import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_authenticated/admin.produtos.$id'
@@ -47,6 +51,11 @@ import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_auth
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -108,6 +117,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedVendedorIndexRoute =
   AuthenticatedVendedorIndexRouteImport.update({
     id: '/',
@@ -214,6 +235,12 @@ const AuthenticatedAdminBannersRoute =
     path: '/banners',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminVendedoresNovoRoute =
   AuthenticatedAdminVendedoresNovoRouteImport.update({
     id: '/novo',
@@ -240,12 +267,16 @@ export interface FileRoutesByFullPath {
   '/carrinho': typeof CarrinhoRoute
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
+  '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -275,10 +306,14 @@ export interface FileRoutesByTo {
   '/carrinho': typeof CarrinhoRoute
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
+  '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -310,12 +345,16 @@ export interface FileRoutesById {
   '/carrinho': typeof CarrinhoRoute
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
+  '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/_authenticated/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -347,12 +386,16 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/catalogo'
     | '/checkout'
+    | '/mcp'
     | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/conta'
     | '/pedidos'
     | '/vendedor'
     | '/produto/$slug'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/banners'
     | '/admin/bling'
     | '/admin/cadastros-b2b'
@@ -382,10 +425,14 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/catalogo'
     | '/checkout'
+    | '/mcp'
     | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/conta'
     | '/pedidos'
     | '/produto/$slug'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/banners'
     | '/admin/bling'
     | '/admin/cadastros-b2b'
@@ -416,12 +463,16 @@ export interface FileRouteTypes {
     | '/carrinho'
     | '/catalogo'
     | '/checkout'
+    | '/mcp'
     | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/conta'
     | '/_authenticated/pedidos'
     | '/_authenticated/vendedor'
     | '/produto/$slug'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/banners'
     | '/_authenticated/admin/bling'
     | '/_authenticated/admin/cadastros-b2b'
@@ -453,8 +504,12 @@ export interface RootRouteChildren {
   CarrinhoRoute: typeof CarrinhoRoute
   CatalogoRoute: typeof CatalogoRoute
   CheckoutRoute: typeof CheckoutRoute
+  McpRoute: typeof McpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -464,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -549,6 +611,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/vendedor/': {
       id: '/_authenticated/vendedor/'
@@ -675,6 +751,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/banners'
       preLoaderRoute: typeof AuthenticatedAdminBannersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/vendedores/novo': {
       id: '/_authenticated/admin/vendedores/novo'
@@ -814,8 +897,13 @@ const rootRouteChildren: RootRouteChildren = {
   CarrinhoRoute: CarrinhoRoute,
   CatalogoRoute: CatalogoRoute,
   CheckoutRoute: CheckoutRoute,
+  McpRoute: McpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
