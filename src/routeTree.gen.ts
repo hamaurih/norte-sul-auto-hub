@@ -41,6 +41,8 @@ import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authenticated/admin.bling'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
+import { Route as AuthenticatedAdminProdutosNovoRouteImport } from './routes/_authenticated/admin.produtos.novo'
+import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_authenticated/admin.produtos.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -218,6 +220,18 @@ const AuthenticatedAdminVendedoresNovoRoute =
     path: '/novo',
     getParentRoute: () => AuthenticatedAdminVendedoresRoute,
   } as any)
+const AuthenticatedAdminProdutosNovoRoute =
+  AuthenticatedAdminProdutosNovoRouteImport.update({
+    id: '/novo',
+    path: '/novo',
+    getParentRoute: () => AuthenticatedAdminProdutosRoute,
+  } as any)
+const AuthenticatedAdminProdutosIdRoute =
+  AuthenticatedAdminProdutosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminProdutosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -242,7 +256,7 @@ export interface FileRoutesByFullPath {
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/produtos': typeof AuthenticatedAdminProdutosRouteWithChildren
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
@@ -250,6 +264,8 @@ export interface FileRoutesByFullPath {
   '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
+  '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRoutesByTo {
@@ -273,7 +289,7 @@ export interface FileRoutesByTo {
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/produtos': typeof AuthenticatedAdminProdutosRouteWithChildren
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
@@ -281,6 +297,8 @@ export interface FileRoutesByTo {
   '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/vendedor': typeof AuthenticatedVendedorIndexRoute
+  '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
+  '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRoutesById {
@@ -308,7 +326,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRouteWithChildren
   '/_authenticated/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/_authenticated/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
@@ -316,6 +334,8 @@ export interface FileRoutesById {
   '/_authenticated/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/_authenticated/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
+  '/_authenticated/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/_authenticated/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRouteTypes {
@@ -351,6 +371,8 @@ export interface FileRouteTypes {
     | '/vendedor/pedido-assistido'
     | '/admin/'
     | '/vendedor/'
+    | '/admin/produtos/$id'
+    | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -382,6 +404,8 @@ export interface FileRouteTypes {
     | '/vendedor/pedido-assistido'
     | '/admin'
     | '/vendedor'
+    | '/admin/produtos/$id'
+    | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
   id:
     | '__root__'
@@ -416,6 +440,8 @@ export interface FileRouteTypes {
     | '/_authenticated/vendedor/pedido-assistido'
     | '/_authenticated/admin/'
     | '/_authenticated/vendedor/'
+    | '/_authenticated/admin/produtos/$id'
+    | '/_authenticated/admin/produtos/novo'
     | '/_authenticated/admin/vendedores/novo'
   fileRoutesById: FileRoutesById
 }
@@ -657,8 +683,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVendedoresNovoRouteImport
       parentRoute: typeof AuthenticatedAdminVendedoresRoute
     }
+    '/_authenticated/admin/produtos/novo': {
+      id: '/_authenticated/admin/produtos/novo'
+      path: '/novo'
+      fullPath: '/admin/produtos/novo'
+      preLoaderRoute: typeof AuthenticatedAdminProdutosNovoRouteImport
+      parentRoute: typeof AuthenticatedAdminProdutosRoute
+    }
+    '/_authenticated/admin/produtos/$id': {
+      id: '/_authenticated/admin/produtos/$id'
+      path: '/$id'
+      fullPath: '/admin/produtos/$id'
+      preLoaderRoute: typeof AuthenticatedAdminProdutosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminProdutosRoute
+    }
   }
 }
+
+interface AuthenticatedAdminProdutosRouteChildren {
+  AuthenticatedAdminProdutosIdRoute: typeof AuthenticatedAdminProdutosIdRoute
+  AuthenticatedAdminProdutosNovoRoute: typeof AuthenticatedAdminProdutosNovoRoute
+}
+
+const AuthenticatedAdminProdutosRouteChildren: AuthenticatedAdminProdutosRouteChildren =
+  {
+    AuthenticatedAdminProdutosIdRoute: AuthenticatedAdminProdutosIdRoute,
+    AuthenticatedAdminProdutosNovoRoute: AuthenticatedAdminProdutosNovoRoute,
+  }
+
+const AuthenticatedAdminProdutosRouteWithChildren =
+  AuthenticatedAdminProdutosRoute._addFileChildren(
+    AuthenticatedAdminProdutosRouteChildren,
+  )
 
 interface AuthenticatedAdminVendedoresRouteChildren {
   AuthenticatedAdminVendedoresNovoRoute: typeof AuthenticatedAdminVendedoresNovoRoute
@@ -686,7 +742,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminIaAesBusinessRoute: typeof AuthenticatedAdminIaAesBusinessRoute
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
-  AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
+  AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRouteWithChildren
   AuthenticatedAdminPromocoesRoute: typeof AuthenticatedAdminPromocoesRoute
   AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -703,7 +759,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIaAesBusinessRoute: AuthenticatedAdminIaAesBusinessRoute,
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
-  AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
+  AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRouteWithChildren,
   AuthenticatedAdminPromocoesRoute: AuthenticatedAdminPromocoesRoute,
   AuthenticatedAdminVendedoresRoute:
     AuthenticatedAdminVendedoresRouteWithChildren,
