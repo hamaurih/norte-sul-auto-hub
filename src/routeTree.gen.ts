@@ -49,6 +49,7 @@ import { Route as AuthenticatedAdminEcossistemaIndexRouteImport } from './routes
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 import { Route as AuthenticatedAdminProdutosNovoRouteImport } from './routes/_authenticated/admin.produtos.novo'
 import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_authenticated/admin.produtos.$id'
+import { Route as AuthenticatedAdminEcossistemaSlugRouteImport } from './routes/_authenticated/admin.ecossistema.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -273,6 +274,12 @@ const AuthenticatedAdminProdutosIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminProdutosRoute,
   } as any)
+const AuthenticatedAdminEcossistemaSlugRoute =
+  AuthenticatedAdminEcossistemaSlugRouteImport.update({
+    id: '/$slug',
+    path: '/$slug',
+    getParentRoute: () => AuthenticatedAdminEcossistemaRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -310,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
@@ -348,6 +356,7 @@ export interface FileRoutesByTo {
   '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/vendedor': typeof AuthenticatedVendedorIndexRoute
+  '/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
@@ -391,6 +400,7 @@ export interface FileRoutesById {
   '/_authenticated/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/_authenticated/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
   '/_authenticated/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/_authenticated/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/_authenticated/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
@@ -434,6 +444,7 @@ export interface FileRouteTypes {
     | '/vendedor/pedido-assistido'
     | '/admin/'
     | '/vendedor/'
+    | '/admin/ecossistema/$slug'
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/vendedor/pedido-assistido'
     | '/admin'
     | '/vendedor'
+    | '/admin/ecossistema/$slug'
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
@@ -514,6 +526,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendedor/pedido-assistido'
     | '/_authenticated/admin/'
     | '/_authenticated/vendedor/'
+    | '/_authenticated/admin/ecossistema/$slug'
     | '/_authenticated/admin/produtos/$id'
     | '/_authenticated/admin/produtos/novo'
     | '/_authenticated/admin/vendedores/novo'
@@ -818,15 +831,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProdutosIdRouteImport
       parentRoute: typeof AuthenticatedAdminProdutosRoute
     }
+    '/_authenticated/admin/ecossistema/$slug': {
+      id: '/_authenticated/admin/ecossistema/$slug'
+      path: '/$slug'
+      fullPath: '/admin/ecossistema/$slug'
+      preLoaderRoute: typeof AuthenticatedAdminEcossistemaSlugRouteImport
+      parentRoute: typeof AuthenticatedAdminEcossistemaRoute
+    }
   }
 }
 
 interface AuthenticatedAdminEcossistemaRouteChildren {
+  AuthenticatedAdminEcossistemaSlugRoute: typeof AuthenticatedAdminEcossistemaSlugRoute
   AuthenticatedAdminEcossistemaIndexRoute: typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 
 const AuthenticatedAdminEcossistemaRouteChildren: AuthenticatedAdminEcossistemaRouteChildren =
   {
+    AuthenticatedAdminEcossistemaSlugRoute:
+      AuthenticatedAdminEcossistemaSlugRoute,
     AuthenticatedAdminEcossistemaIndexRoute:
       AuthenticatedAdminEcossistemaIndexRoute,
   }
