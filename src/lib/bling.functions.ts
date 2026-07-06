@@ -193,32 +193,55 @@ export const updateBlingConfig = createServerFn({ method: "POST" })
  * Cada função registra um log e retorna imediatamente.
  * ================================================================== */
 
-function makeSync(entity: "produto" | "imagem" | "estoque" | "preco" | "cliente" | "pedido", action: string) {
-  return createServerFn({ method: "POST" })
-    .middleware([requireSupabaseAuth])
-    .handler(async ({ context }) => {
-      await assertAdmin(context.supabase, context.userId);
-      const { data: cfg } = await (context.supabase as any)
-        .from("bling_config")
-        .select("access_token,expires_at,active")
-        .limit(1)
-        .maybeSingle();
-      const hasToken = !!(cfg?.access_token && cfg.expires_at && new Date(cfg.expires_at) > new Date());
-      const status: "pendente" | "erro" = hasToken ? "pendente" : "erro";
-      const message = hasToken
-        ? `Sincronização de ${entity} enfileirada.`
-        : `Falha: conexão com Bling não estabelecida. Autorize antes de sincronizar ${entity}.`;
-      await log(context.supabase, { entity, action, status, message });
-      return { ok: hasToken, message };
-    });
+// Cada server fn precisa ser criada no top-level: o code-splitter do TanStack
+// só remove o handler do bundle do cliente quando `createServerFn` é chamado
+// diretamente no escopo do módulo. Fábricas deixariam o handler rodar no
+// navegador — onde `context.supabase` é undefined e explode com
+// "Cannot read properties of undefined (reading 'from')".
+async function runSyncStub(
+  supabase: any,
+  userId: string,
+  entity: "produto" | "imagem" | "estoque" | "preco" | "cliente" | "pedido",
+  action: string,
+) {
+  await assertAdmin(supabase, userId);
+  const { data: cfg } = await supabase
+    .from("bling_config")
+    .select("access_token,expires_at,active")
+    .limit(1)
+    .maybeSingle();
+  const hasToken = !!(cfg?.access_token && cfg.expires_at && new Date(cfg.expires_at) > new Date());
+  const status: "pendente" | "erro" = hasToken ? "pendente" : "erro";
+  const message = hasToken
+    ? `Sincronização de ${entity} enfileirada.`
+    : `Falha: conexão com Bling não estabelecida. Autorize antes de sincronizar ${entity}.`;
+  await log(supabase, { entity, action, status, message });
+  return { ok: hasToken, message };
 }
 
-export const syncBlingProducts = makeSync("produto", "sync_all");
-export const syncBlingImages = makeSync("imagem", "sync_all");
-export const syncBlingStock = makeSync("estoque", "sync_all");
-export const syncBlingPrices = makeSync("preco", "sync_all");
-export const syncBlingCustomers = makeSync("cliente", "sync_all");
-export const sendPendingOrders = makeSync("pedido", "send_pending");
+export const syncBlingProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "produto", "sync_all"));
+
+export const syncBlingImages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "imagem", "sync_all"));
+
+export const syncBlingStock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "estoque", "sync_all"));
+
+export const syncBlingPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "preco", "sync_all"));
+
+export const syncBlingCustomers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "cliente", "sync_all"));
+
+export const sendPendingOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "pedido", "send_pending"));
 
 /* ================================================================== *
  * Reprocess a specific log
