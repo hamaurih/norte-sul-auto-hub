@@ -45,6 +45,7 @@ import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authenticated/admin.bling'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AuthenticatedAdminEcossistemaIndexRouteImport } from './routes/_authenticated/admin.ecossistema.index'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 import { Route as AuthenticatedAdminProdutosNovoRouteImport } from './routes/_authenticated/admin.produtos.novo'
 import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_authenticated/admin.produtos.$id'
@@ -248,6 +249,12 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminEcossistemaIndexRoute =
+  AuthenticatedAdminEcossistemaIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminEcossistemaRoute,
+  } as any)
 const AuthenticatedAdminVendedoresNovoRoute =
   AuthenticatedAdminVendedoresNovoRouteImport.update({
     id: '/novo',
@@ -291,7 +298,7 @@ export interface FileRoutesByFullPath {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
-  '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRoute
+  '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/admin/ecossistema/': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -329,7 +337,6 @@ export interface FileRoutesByTo {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
-  '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRoute
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -371,7 +379,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/cupons': typeof AuthenticatedAdminCuponsRoute
-  '/_authenticated/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRoute
+  '/_authenticated/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
   '/_authenticated/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/_authenticated/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/_authenticated/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/_authenticated/admin/ecossistema/': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
+    | '/admin/ecossistema/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -451,7 +461,6 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/cupons'
-    | '/admin/ecossistema'
     | '/admin/ia-aes-business'
     | '/admin/marcas'
     | '/admin/pedidos'
@@ -466,6 +475,7 @@ export interface FileRouteTypes {
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
+    | '/admin/ecossistema'
   id:
     | '__root__'
     | '/'
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/produtos/$id'
     | '/_authenticated/admin/produtos/novo'
     | '/_authenticated/admin/vendedores/novo'
+    | '/_authenticated/admin/ecossistema/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -779,6 +790,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/ecossistema/': {
+      id: '/_authenticated/admin/ecossistema/'
+      path: '/'
+      fullPath: '/admin/ecossistema/'
+      preLoaderRoute: typeof AuthenticatedAdminEcossistemaIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminEcossistemaRoute
+    }
     '/_authenticated/admin/vendedores/novo': {
       id: '/_authenticated/admin/vendedores/novo'
       path: '/novo'
@@ -802,6 +820,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminEcossistemaRouteChildren {
+  AuthenticatedAdminEcossistemaIndexRoute: typeof AuthenticatedAdminEcossistemaIndexRoute
+}
+
+const AuthenticatedAdminEcossistemaRouteChildren: AuthenticatedAdminEcossistemaRouteChildren =
+  {
+    AuthenticatedAdminEcossistemaIndexRoute:
+      AuthenticatedAdminEcossistemaIndexRoute,
+  }
+
+const AuthenticatedAdminEcossistemaRouteWithChildren =
+  AuthenticatedAdminEcossistemaRoute._addFileChildren(
+    AuthenticatedAdminEcossistemaRouteChildren,
+  )
 
 interface AuthenticatedAdminProdutosRouteChildren {
   AuthenticatedAdminProdutosIdRoute: typeof AuthenticatedAdminProdutosIdRoute
@@ -842,7 +875,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminCuponsRoute: typeof AuthenticatedAdminCuponsRoute
-  AuthenticatedAdminEcossistemaRoute: typeof AuthenticatedAdminEcossistemaRoute
+  AuthenticatedAdminEcossistemaRoute: typeof AuthenticatedAdminEcossistemaRouteWithChildren
   AuthenticatedAdminIaAesBusinessRoute: typeof AuthenticatedAdminIaAesBusinessRoute
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
@@ -860,7 +893,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminCuponsRoute: AuthenticatedAdminCuponsRoute,
-  AuthenticatedAdminEcossistemaRoute: AuthenticatedAdminEcossistemaRoute,
+  AuthenticatedAdminEcossistemaRoute:
+    AuthenticatedAdminEcossistemaRouteWithChildren,
   AuthenticatedAdminIaAesBusinessRoute: AuthenticatedAdminIaAesBusinessRoute,
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
