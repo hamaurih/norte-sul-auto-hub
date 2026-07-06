@@ -23,7 +23,7 @@ export function HeroCarousel({ banners }: { banners: Banner[] }) {
     <section className="relative overflow-hidden bg-secondary">
       <div className="container-x">
         <div className="relative aspect-[21/9] w-full overflow-hidden rounded-lg md:aspect-[16/6]">
-          <img src={b.image_url} alt={b.title} className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700" />
+          <img src={b.image_url} alt={b.title} loading="eager" decoding="async" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
           <div className="relative flex h-full flex-col justify-center gap-3 p-6 text-white md:p-12">
             <span className="w-fit rounded bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-widest">Destaque</span>

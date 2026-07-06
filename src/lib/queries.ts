@@ -35,12 +35,22 @@ const PRODUCT_SELECT = `
   images:product_images(url, is_primary, sort_order)
 `;
 
+// Lighter projection for list/rail rendering — omits heavy `description`
+// (which can be very large) and keeps only fields ProductCard reads.
+const PRODUCT_LIST_SELECT = `
+  id, sku, name, slug, short_description,
+  price_b2c, compare_at_price, stock,
+  featured, is_new, is_offer, sales_count,
+  brand:brands(name, slug),
+  images:product_images(url, is_primary, sort_order)
+`;
+
 export async function fetchFeatured(): Promise<ProductRow[]> {
   // Prefer curated "featured"; if none, fall back to any active products so the
   // storefront always shows merchandise.
   const curated = await supabase
     .from("products")
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_LIST_SELECT)
     .eq("active", true)
     .eq("featured", true)
     .limit(12);
@@ -48,7 +58,7 @@ export async function fetchFeatured(): Promise<ProductRow[]> {
   if ((curated.data?.length ?? 0) > 0) return curated.data as unknown as ProductRow[];
   const { data, error } = await supabase
     .from("products")
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_LIST_SELECT)
     .eq("active", true)
     .order("name")
     .limit(12);
@@ -62,7 +72,7 @@ export async function fetchFeatured(): Promise<ProductRow[]> {
 export async function fetchOffers(): Promise<ProductRow[]> {
   const { data, error } = await supabase
     .from("products")
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_LIST_SELECT)
     .eq("active", true)
     .or("is_offer.eq.true,sale_price_b2c.not.is.null")
     .order("sales_count", { ascending: false })
@@ -80,7 +90,7 @@ export async function fetchNewArrivals(): Promise<ProductRow[]> {
   // imported items automatically populate the rail.
   const { data, error } = await supabase
     .from("products")
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_LIST_SELECT)
     .eq("active", true)
     .order("created_at", { ascending: false })
     .limit(12);
@@ -94,7 +104,7 @@ export async function fetchNewArrivals(): Promise<ProductRow[]> {
 export async function fetchBestSellers(): Promise<ProductRow[]> {
   const { data, error } = await supabase
     .from("products")
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_LIST_SELECT)
     .eq("active", true)
     .order("sales_count", { ascending: false })
     .order("name")
@@ -118,7 +128,7 @@ export interface CatalogFilters {
 }
 
 export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]> {
-  let q = supabase.from("products").select(PRODUCT_SELECT).eq("active", true);
+  let q = supabase.from("products").select(PRODUCT_LIST_SELECT).eq("active", true);
 
   if (f.q) {
     q = q.or(`name.ilike.%${f.q}%,sku.ilike.%${f.q}%,short_description.ilike.%${f.q}%`);
@@ -180,7 +190,7 @@ export async function fetchProductApplications(productId: string) {
 }
 
 export async function fetchRelated(categorySlug: string | null, excludeId: string) {
-  let q = supabase.from("products").select(PRODUCT_SELECT).eq("active", true).neq("id", excludeId).limit(8);
+  let q = supabase.from("products").select(PRODUCT_LIST_SELECT).eq("active", true).neq("id", excludeId).limit(8);
   if (categorySlug) {
     const { data: cat } = await supabase.from("categories").select("id").eq("slug", categorySlug).maybeSingle();
     if (cat) q = q.eq("category_id", cat.id);

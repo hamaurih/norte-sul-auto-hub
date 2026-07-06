@@ -1,4 +1,4 @@
-import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -34,6 +34,17 @@ import {
 } from "@/lib/queries";
 import { useSession } from "@/lib/session";
 
+const HOME_QUERIES: { queryKey: readonly string[]; queryFn: () => Promise<unknown> }[] = [
+  { queryKey: ["banners"], queryFn: fetchBanners },
+  { queryKey: ["mini-banners"], queryFn: fetchMiniBanners },
+  { queryKey: ["categories"], queryFn: fetchCategories },
+  { queryKey: ["offers"], queryFn: fetchOffers },
+  { queryKey: ["new"], queryFn: fetchNewArrivals },
+  { queryKey: ["best"], queryFn: fetchBestSellers },
+  { queryKey: ["featured"], queryFn: fetchFeatured },
+  { queryKey: ["brands"], queryFn: fetchBrands },
+];
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -45,11 +56,20 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: () => (
-    <ClientOnly fallback={<HomeFallback />}>
-      <Home />
-    </ClientOnly>
-  ),
+  loader: async ({ context }) => {
+    // Prefetch above-the-fold data in parallel on the server so the HTML
+    // ships already populated (no skeleton flash on first paint).
+    await Promise.all(
+      HOME_QUERIES.map((q) =>
+        context.queryClient.ensureQueryData({
+          queryKey: [...q.queryKey],
+          queryFn: q.queryFn,
+          staleTime: 60_000,
+        }),
+      ),
+    );
+  },
+  component: Home,
 });
 
 /* ------------------------------------------------------------------ */
