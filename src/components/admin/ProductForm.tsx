@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { productUpsert, type ProductInput } from "@/lib/products.functions";
 import { slugify } from "@/lib/format";
-import { Trash2, ArrowUp, ArrowDown, Star, Plus } from "lucide-react";
+import { Trash2, ArrowUp, ArrowDown, Star, Plus, Upload, Loader2 } from "lucide-react";
 
 type Img = { url: string; alt?: string | null; is_primary?: boolean };
 
@@ -88,6 +88,51 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
   }
   function setPrimary(i: number) {
     setForm((f) => ({ ...f, images: (f.images ?? []).map((img, idx) => ({ ...img, is_primary: idx === i })) }));
+  }
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadFiles(files: FileList | File[]) {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (arr.length === 0) {
+      toast.error("Selecione arquivos de imagem");
+      return;
+    }
+    setUploading(true);
+    try {
+      const bucket = supabase.storage.from("product-images");
+      const uploaded: Img[] = [];
+      for (const file of arr) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+        const path = `${form.sku || "novo"}/${crypto.randomUUID()}.${ext}`;
+        const up = await bucket.upload(path, file, {
+          contentType: file.type,
+          cacheControl: "31536000",
+          upsert: false,
+        });
+        if (up.error) throw up.error;
+        // Long-lived signed URL (10 years) — works while bucket is private.
+        const signed = await bucket.createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signed.error) throw signed.error;
+        uploaded.push({ url: signed.data.signedUrl, alt: file.name, is_primary: false });
+      }
+      setForm((f) => {
+        const existing = f.images ?? [];
+        const merged = [...existing, ...uploaded];
+        // Se não havia principal, primeira nova vira principal
+        if (!existing.some((i) => i.is_primary) && merged.length > 0) {
+          merged[0] = { ...merged[0], is_primary: true };
+        }
+        return { ...f, images: merged };
+      });
+      toast.success(`${uploaded.length} imagem(ns) enviada(s)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha no upload");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -216,8 +261,45 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
 
       {tab === "imagens" && (
         <div className="space-y-3">
+          <div
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+            onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files); }}
+            className="rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-center"
+          >
+            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-sm font-semibold">Arraste imagens aqui ou clique em enviar</p>
+            <p className="mt-1 text-xs text-muted-foreground">JPG, PNG ou WebP · Múltiplos arquivos permitidos</p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-sm font-bold uppercase text-primary-foreground disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploading ? "Enviando..." : "Enviar do computador"}
+              </button>
+              <button
+                type="button"
+                onClick={addImg}
+                className="inline-flex items-center gap-2 rounded border border-border px-4 py-2 text-sm"
+              >
+                <Plus className="h-4 w-4" /> Adicionar por URL
+              </button>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); }}
+            />
+          </div>
           <p className="rounded bg-muted p-3 text-xs text-muted-foreground">
-            Cole a URL da imagem (formato JPG/PNG/WebP). Upload direto ficará disponível ao habilitar buckets públicos em Workspace → Settings → Privacy.
+            💡 Imagens sincronizadas do Bling já aparecem aqui automaticamente após rodar
+            <strong> Ecossistema → Bling → Sincronizar imagens</strong>. Você também pode enviar
+            novas fotos do seu computador ou colar URLs externas.
           </p>
           {(form.images ?? []).map((img, i) => (
             <div key={i} className="flex items-start gap-2 rounded border border-border p-3">
@@ -234,9 +316,11 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
               </div>
             </div>
           ))}
-          <button type="button" onClick={addImg} className="inline-flex items-center gap-2 rounded border border-dashed border-border px-3 py-2 text-sm">
-            <Plus className="h-4 w-4" /> Adicionar imagem
-          </button>
+          {(form.images ?? []).length === 0 && (
+            <div className="rounded border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              Nenhuma imagem adicionada ainda.
+            </div>
+          )}
         </div>
       )}
     </form>
