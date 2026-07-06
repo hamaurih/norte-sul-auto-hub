@@ -20,9 +20,15 @@ export interface ProductRow {
   images: { url: string; is_primary: boolean; sort_order: number }[];
 }
 
+// NOTE: `price_b2b` and `internal_code` are restricted to authenticated users
+// (see column-level GRANT revoke on `anon`). The browser client can be either
+// anon or authenticated, so this projection intentionally omits them to keep
+// anonymous catalog reads working. B2B pricing for approved customers is
+// resolved server-side via `displayPrice` — if we need per-product B2B prices
+// on the browser later, fetch them through an authenticated server function.
 const PRODUCT_SELECT = `
   id, sku, name, slug, short_description, description,
-  price_b2c, price_b2b, compare_at_price, stock,
+  price_b2c, compare_at_price, stock,
   featured, is_new, is_offer, sales_count,
   brand:brands(name, slug),
   category:categories(name, slug),
