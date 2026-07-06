@@ -22,9 +22,25 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function redirectAfterAuth(userId: string) {
+    if (next) {
+      navigate({ to: next as never });
+      return;
+    }
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "gerente");
+    const isVendedor = (roles ?? []).some((r) => r.role === "vendedor");
+    if (isStaff) navigate({ to: "/admin" });
+    else if (isVendedor) navigate({ to: "/vendedor" });
+    else navigate({ to: "/" });
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: (next as never) ?? "/" });
+      if (data.session?.user) redirectAfterAuth(data.session.user.id);
     });
   }, []);
 
@@ -33,7 +49,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -43,12 +59,14 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Conta criada! Você já pode navegar.");
-        navigate({ to: (next as never) ?? "/" });
+        if (data.user) await redirectAfterAuth(data.user.id);
+        else navigate({ to: "/" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bem-vindo(a) de volta!");
-        navigate({ to: (next as never) ?? "/" });
+        if (data.user) await redirectAfterAuth(data.user.id);
+        else navigate({ to: "/" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro na autenticação");
@@ -56,6 +74,7 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
 
   async function google() {
     try {
