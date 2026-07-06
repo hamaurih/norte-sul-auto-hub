@@ -168,7 +168,22 @@ export async function fetchBrands() {
 }
 
 export async function fetchBanners() {
-  const { data } = await supabase.from("banners").select("*").eq("position", "hero").order("sort_order");
+  const { data } = await supabase
+    .from("banners")
+    .select("*")
+    .in("position", ["hero", "home_hero"])
+    .eq("active", true)
+    .order("sort_order");
+  return data ?? [];
+}
+
+export async function fetchMiniBanners() {
+  const { data } = await supabase
+    .from("banners")
+    .select("*")
+    .in("position", ["mini", "home_mini"])
+    .eq("active", true)
+    .order("sort_order");
   return data ?? [];
 }
 
