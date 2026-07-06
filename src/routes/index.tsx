@@ -35,6 +35,18 @@ import {
 import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/")({
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData({ queryKey: ["banners"], queryFn: fetchBanners }),
+      context.queryClient.ensureQueryData({ queryKey: ["mini-banners"], queryFn: fetchMiniBanners }),
+      context.queryClient.ensureQueryData({ queryKey: ["categories"], queryFn: fetchCategories }),
+      context.queryClient.ensureQueryData({ queryKey: ["offers"], queryFn: fetchOffers }),
+      context.queryClient.ensureQueryData({ queryKey: ["new"], queryFn: fetchNewArrivals }),
+      context.queryClient.ensureQueryData({ queryKey: ["best"], queryFn: fetchBestSellers }),
+      context.queryClient.ensureQueryData({ queryKey: ["featured"], queryFn: fetchFeatured }),
+      context.queryClient.ensureQueryData({ queryKey: ["brands"], queryFn: fetchBrands }),
+    ]);
+  },
   head: () => ({
     meta: [
       { title: "Norte Sul Acessórios · Loja e Atacado Automotivo" },
