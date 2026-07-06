@@ -44,47 +44,65 @@ export async function fetchFeatured(): Promise<ProductRow[]> {
     .eq("active", true)
     .eq("featured", true)
     .limit(12);
+  if (curated.error) console.error("Erro ao carregar produtos em destaque", curated.error);
   if ((curated.data?.length ?? 0) > 0) return curated.data as unknown as ProductRow[];
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .order("name")
     .limit(12);
+  if (error) {
+    console.error("Erro ao carregar vitrine de produtos", error);
+    return [];
+  }
   return (data as unknown as ProductRow[]) ?? [];
 }
 
 export async function fetchOffers(): Promise<ProductRow[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .or("is_offer.eq.true,sale_price_b2c.not.is.null")
     .order("sales_count", { ascending: false })
     .limit(12);
+  if (error) {
+    console.error("Erro ao carregar ofertas", error);
+    return fetchBestSellers();
+  }
+  if ((data?.length ?? 0) === 0) return fetchBestSellers();
   return (data as unknown as ProductRow[]) ?? [];
 }
 
 export async function fetchNewArrivals(): Promise<ProductRow[]> {
   // Show newest products; do not require the "is_new" flag so recently
   // imported items automatically populate the rail.
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .order("created_at", { ascending: false })
     .limit(12);
+  if (error) {
+    console.error("Erro ao carregar lançamentos", error);
+    return fetchBestSellers();
+  }
   return (data as unknown as ProductRow[]) ?? [];
 }
 
 export async function fetchBestSellers(): Promise<ProductRow[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .order("sales_count", { ascending: false })
     .order("name")
     .limit(12);
+  if (error) {
+    console.error("Erro ao carregar mais vendidos", error);
+    return [];
+  }
   return (data as unknown as ProductRow[]) ?? [];
 }
 
@@ -131,17 +149,25 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
       q = q.order("sales_count", { ascending: false });
   }
 
-  const { data } = await q.limit(60);
+  const { data, error } = await q.limit(60);
+  if (error) {
+    console.error("Erro ao carregar catálogo", error);
+    return [];
+  }
   return (data as unknown as ProductRow[]) ?? [];
 }
 
 export async function fetchProductBySlug(slug: string): Promise<ProductRow | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("slug", slug)
     .eq("active", true)
     .maybeSingle();
+  if (error) {
+    console.error("Erro ao carregar produto", error);
+    return null;
+  }
   return (data as unknown as ProductRow) ?? null;
 }
 
