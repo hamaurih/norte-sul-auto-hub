@@ -1,5 +1,36 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/lib/session";
+import {
+  LayoutDashboard,
+  Users,
+  UserCog,
+  Briefcase,
+  ShoppingBag,
+  Package,
+  FolderTree,
+  Tag,
+  Percent,
+  Ticket,
+  Image as ImageIcon,
+  RefreshCcw,
+  Bot,
+  Settings,
+  ShieldAlert,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -9,5 +40,115 @@ export const Route = createFileRoute("/_authenticated/admin")({
     const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "gerente");
     if (!isStaff) throw redirect({ to: "/" });
   },
-  component: () => <Outlet />,
+  component: AdminLayout,
 });
+
+type Item = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  group: "operacao" | "catalogo" | "marketing" | "integracoes";
+  adminOnly?: boolean;
+};
+
+const items: Item[] = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "operacao" },
+  { to: "/admin/cadastros-b2b", label: "Cadastros B2B", icon: Briefcase, group: "operacao" },
+  { to: "/admin/clientes", label: "Clientes", icon: Users, group: "operacao" },
+  { to: "/admin/vendedores", label: "Vendedores", icon: UserCog, group: "operacao", adminOnly: true },
+  { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, group: "operacao" },
+
+  { to: "/admin/produtos", label: "Produtos", icon: Package, group: "catalogo" },
+  { to: "/admin/categorias", label: "Categorias", icon: FolderTree, group: "catalogo" },
+  { to: "/admin/marcas", label: "Marcas", icon: Tag, group: "catalogo" },
+
+  { to: "/admin/promocoes", label: "Promoções", icon: Percent, group: "marketing" },
+  { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "marketing" },
+  { to: "/admin/banners", label: "Banners", icon: ImageIcon, group: "marketing" },
+
+  { to: "/admin/bling", label: "Bling", icon: RefreshCcw, group: "integracoes", adminOnly: true },
+  { to: "/admin/ia-aes-business", label: "IA A&S Business", icon: Bot, group: "integracoes", adminOnly: true },
+  { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "integracoes", adminOnly: true },
+];
+
+const groupLabels: Record<Item["group"], string> = {
+  operacao: "Operação",
+  catalogo: "Catálogo",
+  marketing: "Marketing",
+  integracoes: "Integrações",
+};
+
+function AdminSidebar() {
+  const { isAdmin, isStaff } = useSession();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  if (!isStaff) return null;
+
+  const visible = items.filter((i) => !i.adminOnly || isAdmin);
+  const groups = ["operacao", "catalogo", "marketing", "integracoes"] as const;
+
+  const isActive = (to: string) => (to === "/admin" ? pathname === "/admin" : pathname.startsWith(to));
+
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent>
+        {groups.map((g) => {
+          const gItems = visible.filter((i) => i.group === g);
+          if (gItems.length === 0) return null;
+          return (
+            <SidebarGroup key={g}>
+              <SidebarGroupLabel>{groupLabels[g]}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {gItems.map((item) => (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton asChild isActive={isActive(item.to)}>
+                        <Link to={item.to} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.label}</span>}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function AdminLayout() {
+  const { isStaff, loading } = useSession();
+
+  if (loading) return null;
+  if (!isStaff) {
+    return (
+      <div className="container-x py-16 text-center">
+        <ShieldAlert className="mx-auto h-10 w-10 text-destructive" />
+        <p className="mt-2">Acesso restrito.</p>
+      </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-[calc(100vh-4rem)] w-full">
+        <AdminSidebar />
+        <div className="flex-1">
+          <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3">
+            <SidebarTrigger />
+            <span className="font-display text-sm font-bold uppercase">Painel Administrativo</span>
+          </header>
+          <main className="p-4 md:p-6">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
