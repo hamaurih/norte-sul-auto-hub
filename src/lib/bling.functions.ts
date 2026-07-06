@@ -367,7 +367,13 @@ export const syncBlingImages = createServerFn({ method: "POST" })
       for (const prod of prods ?? []) {
         try {
           const det: any = await blingFetch(token, `/produtos/${prod.bling_id}`);
-          const imgs: any[] = det?.data?.midia?.imagens?.externas ?? det?.data?.imagens ?? [];
+          const midia = det?.data?.midia?.imagens ?? {};
+          const imgs: any[] = [
+            ...(midia.externas ?? []),
+            ...(midia.internas ?? []),
+            ...(det?.data?.imagens ?? []),
+          ];
+
           processed++;
           if (imgs.length === 0) continue;
           await sb.from("product_images").delete().eq("product_id", prod.id);
