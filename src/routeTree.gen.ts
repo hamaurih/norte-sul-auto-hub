@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminCuponsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminCategoriasRouteImport } from './routes/_authenticated/admin.categorias'
 import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_authenticated/admin.cadastros-b2b'
+import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authenticated/admin.bling'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 
@@ -186,6 +187,11 @@ const AuthenticatedAdminCadastrosB2bRoute =
     path: '/cadastros-b2b',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminBlingRoute = AuthenticatedAdminBlingRouteImport.update({
+  id: '/bling',
+  path: '/bling',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminBannersRoute =
   AuthenticatedAdminBannersRouteImport.update({
     id: '/banners',
@@ -213,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
+  '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
+  '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
+  '/_authenticated/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/_authenticated/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/_authenticated/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/vendedor'
     | '/produto/$slug'
     | '/admin/banners'
+    | '/admin/bling'
     | '/admin/cadastros-b2b'
     | '/admin/categorias'
     | '/admin/clientes'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/produto/$slug'
     | '/admin/banners'
+    | '/admin/bling'
     | '/admin/cadastros-b2b'
     | '/admin/categorias'
     | '/admin/clientes'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendedor'
     | '/produto/$slug'
     | '/_authenticated/admin/banners'
+    | '/_authenticated/admin/bling'
     | '/_authenticated/admin/cadastros-b2b'
     | '/_authenticated/admin/categorias'
     | '/_authenticated/admin/clientes'
@@ -584,6 +596,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCadastrosB2bRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/bling': {
+      id: '/_authenticated/admin/bling'
+      path: '/bling'
+      fullPath: '/admin/bling'
+      preLoaderRoute: typeof AuthenticatedAdminBlingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/banners': {
       id: '/_authenticated/admin/banners'
       path: '/banners'
@@ -618,6 +637,7 @@ const AuthenticatedAdminVendedoresRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBannersRoute: typeof AuthenticatedAdminBannersRoute
+  AuthenticatedAdminBlingRoute: typeof AuthenticatedAdminBlingRoute
   AuthenticatedAdminCadastrosB2bRoute: typeof AuthenticatedAdminCadastrosB2bRoute
   AuthenticatedAdminCategoriasRoute: typeof AuthenticatedAdminCategoriasRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
@@ -632,6 +652,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBannersRoute: AuthenticatedAdminBannersRoute,
+  AuthenticatedAdminBlingRoute: AuthenticatedAdminBlingRoute,
   AuthenticatedAdminCadastrosB2bRoute: AuthenticatedAdminCadastrosB2bRoute,
   AuthenticatedAdminCategoriasRoute: AuthenticatedAdminCategoriasRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
