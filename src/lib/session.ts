@@ -10,6 +10,7 @@ export interface SessionState {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;
   isStaff: boolean;
   isSalesRep: boolean;
   isB2BApproved: boolean;
@@ -23,6 +24,7 @@ const empty: SessionState = {
   user: null,
   session: null,
   loading: true,
+  isAdmin: false,
   isStaff: false,
   isSalesRep: false,
   isB2BApproved: false,
