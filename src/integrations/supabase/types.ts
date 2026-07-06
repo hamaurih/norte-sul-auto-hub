@@ -356,48 +356,78 @@ export type Database = {
       bling_config: {
         Row: {
           access_token: string | null
+          active: boolean
+          auto_sync: boolean
           auto_sync_cron: string | null
           client_id: string | null
+          client_secret_encrypted: string | null
           expires_at: string | null
           hide_out_of_stock: boolean
           id: string
           image_overwrites_manual: boolean
           last_authorized_at: string | null
+          last_test_at: string | null
+          last_test_status: string | null
           manual_price_overrides: boolean
+          redirect_uri: string | null
           refresh_token: string | null
           scope: string | null
+          source_price_b2c: boolean
+          source_products: boolean
+          source_stock: boolean
+          sync_interval_minutes: number
           sync_prices: boolean
           sync_stock: boolean
           updated_at: string
         }
         Insert: {
           access_token?: string | null
+          active?: boolean
+          auto_sync?: boolean
           auto_sync_cron?: string | null
           client_id?: string | null
+          client_secret_encrypted?: string | null
           expires_at?: string | null
           hide_out_of_stock?: boolean
           id?: string
           image_overwrites_manual?: boolean
           last_authorized_at?: string | null
+          last_test_at?: string | null
+          last_test_status?: string | null
           manual_price_overrides?: boolean
+          redirect_uri?: string | null
           refresh_token?: string | null
           scope?: string | null
+          source_price_b2c?: boolean
+          source_products?: boolean
+          source_stock?: boolean
+          sync_interval_minutes?: number
           sync_prices?: boolean
           sync_stock?: boolean
           updated_at?: string
         }
         Update: {
           access_token?: string | null
+          active?: boolean
+          auto_sync?: boolean
           auto_sync_cron?: string | null
           client_id?: string | null
+          client_secret_encrypted?: string | null
           expires_at?: string | null
           hide_out_of_stock?: boolean
           id?: string
           image_overwrites_manual?: boolean
           last_authorized_at?: string | null
+          last_test_at?: string | null
+          last_test_status?: string | null
           manual_price_overrides?: boolean
+          redirect_uri?: string | null
           refresh_token?: string | null
           scope?: string | null
+          source_price_b2c?: boolean
+          source_products?: boolean
+          source_stock?: boolean
+          sync_interval_minutes?: number
           sync_prices?: boolean
           sync_stock?: boolean
           updated_at?: string
