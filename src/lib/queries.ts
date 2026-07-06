@@ -35,6 +35,16 @@ const PRODUCT_SELECT = `
   images:product_images(url, is_primary, sort_order)
 `;
 
+// Lighter projection for list/rail rendering — omits heavy `description`
+// (which can be very large) and keeps only fields ProductCard reads.
+const PRODUCT_LIST_SELECT = `
+  id, sku, name, slug, short_description,
+  price_b2c, compare_at_price, stock,
+  featured, is_new, is_offer, sales_count,
+  brand:brands(name, slug),
+  images:product_images(url, is_primary, sort_order)
+`;
+
 export async function fetchFeatured(): Promise<ProductRow[]> {
   // Prefer curated "featured"; if none, fall back to any active products so the
   // storefront always shows merchandise.
