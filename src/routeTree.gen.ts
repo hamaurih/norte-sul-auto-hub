@@ -28,6 +28,7 @@ import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './rout
 import { Route as AuthenticatedVendedorMeusPedidosRouteImport } from './routes/_authenticated/vendedor.meus-pedidos'
 import { Route as AuthenticatedVendedorClientesRouteImport } from './routes/_authenticated/vendedor.clientes'
 import { Route as AuthenticatedAdminVendedoresRouteImport } from './routes/_authenticated/admin.vendedores'
+import { Route as AuthenticatedAdminPromocoesRouteImport } from './routes/_authenticated/admin.promocoes'
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminMarcasRouteImport } from './routes/_authenticated/admin.marcas'
@@ -136,6 +137,12 @@ const AuthenticatedAdminVendedoresRoute =
     path: '/vendedores',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPromocoesRoute =
+  AuthenticatedAdminPromocoesRouteImport.update({
+    id: '/promocoes',
+    path: '/promocoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProdutosRoute =
   AuthenticatedAdminProdutosRouteImport.update({
     id: '/produtos',
@@ -205,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -231,6 +239,7 @@ export interface FileRoutesByTo {
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -261,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
+  '/_authenticated/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/_authenticated/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/_authenticated/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/admin/marcas'
     | '/admin/pedidos'
     | '/admin/produtos'
+    | '/admin/promocoes'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/marcas'
     | '/admin/pedidos'
     | '/admin/produtos'
+    | '/admin/promocoes'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -346,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/marcas'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/produtos'
+    | '/_authenticated/admin/promocoes'
     | '/_authenticated/admin/vendedores'
     | '/_authenticated/vendedor/clientes'
     | '/_authenticated/vendedor/meus-pedidos'
@@ -502,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVendedoresRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/promocoes': {
+      id: '/_authenticated/admin/promocoes'
+      path: '/promocoes'
+      fullPath: '/admin/promocoes'
+      preLoaderRoute: typeof AuthenticatedAdminPromocoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/produtos': {
       id: '/_authenticated/admin/produtos'
       path: '/produtos'
@@ -584,6 +604,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
+  AuthenticatedAdminPromocoesRoute: typeof AuthenticatedAdminPromocoesRoute
   AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -596,6 +617,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
+  AuthenticatedAdminPromocoesRoute: AuthenticatedAdminPromocoesRoute,
   AuthenticatedAdminVendedoresRoute:
     AuthenticatedAdminVendedoresRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
