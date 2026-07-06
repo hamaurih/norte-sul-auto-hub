@@ -17,6 +17,7 @@ import {
   Bot,
   Settings,
   ShieldAlert,
+  Network,
 } from "lucide-react";
 import {
   Sidebar,
