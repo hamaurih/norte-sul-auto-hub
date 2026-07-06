@@ -111,14 +111,16 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const isAuth = path.startsWith("/auth");
+  const isPanel = path.startsWith("/admin") || path.startsWith("/vendedor");
+  const hideChrome = isAuth || isPanel;
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex min-h-screen flex-col">
-        {!isAuth && <Header />}
+        {!hideChrome && <Header />}
         <main className="flex-1">
           <Outlet />
         </main>
-        {!isAuth && <Footer />}
+        {!hideChrome && <Footer />}
       </div>
       <Toaster richColors position="top-center" />
     </QueryClientProvider>

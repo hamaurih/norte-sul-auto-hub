@@ -137,12 +137,15 @@ function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-[calc(100vh-4rem)] w-full">
+      <div className="flex min-h-screen w-full">
         <AdminSidebar />
-        <div className="flex-1">
-          <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-border bg-card px-3">
             <SidebarTrigger />
             <span className="font-display text-sm font-bold uppercase">Painel Administrativo</span>
+            <Link to="/" className="ml-auto text-xs font-semibold uppercase text-muted-foreground hover:text-foreground">
+              ← Voltar à loja
+            </Link>
           </header>
           <main className="p-4 md:p-6">
             <Outlet />
