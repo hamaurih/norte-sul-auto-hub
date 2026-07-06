@@ -30,11 +30,20 @@ const PRODUCT_SELECT = `
 `;
 
 export async function fetchFeatured(): Promise<ProductRow[]> {
-  const { data } = await supabase
+  // Prefer curated "featured"; if none, fall back to any active products so the
+  // storefront always shows merchandise.
+  const curated = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .eq("featured", true)
+    .limit(12);
+  if ((curated.data?.length ?? 0) > 0) return curated.data as unknown as ProductRow[];
+  const { data } = await supabase
+    .from("products")
+    .select(PRODUCT_SELECT)
+    .eq("active", true)
+    .order("name")
     .limit(12);
   return (data as unknown as ProductRow[]) ?? [];
 }
@@ -44,18 +53,19 @@ export async function fetchOffers(): Promise<ProductRow[]> {
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
-    .eq("is_offer", true)
+    .or("is_offer.eq.true,sale_price_b2c.not.is.null")
     .order("sales_count", { ascending: false })
     .limit(12);
   return (data as unknown as ProductRow[]) ?? [];
 }
 
 export async function fetchNewArrivals(): Promise<ProductRow[]> {
+  // Show newest products; do not require the "is_new" flag so recently
+  // imported items automatically populate the rail.
   const { data } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("active", true)
-    .eq("is_new", true)
     .order("created_at", { ascending: false })
     .limit(12);
   return (data as unknown as ProductRow[]) ?? [];
@@ -67,9 +77,11 @@ export async function fetchBestSellers(): Promise<ProductRow[]> {
     .select(PRODUCT_SELECT)
     .eq("active", true)
     .order("sales_count", { ascending: false })
+    .order("name")
     .limit(12);
   return (data as unknown as ProductRow[]) ?? [];
 }
+
 
 export interface CatalogFilters {
   q?: string;
