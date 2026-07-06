@@ -132,7 +132,7 @@ function B2BList() {
     },
   });
 
-  async function decide(regId: string, userId: string, status: "aprovado" | "reprovado", groupRole?: string) {
+  async function decide(regId: string, userId: string, status: "aprovado" | "reprovado", groupRole?: "revendedor" | "oficina" | "distribuidor") {
     await supabase.from("b2b_registrations").update({ status, reviewed_at: new Date().toISOString() }).eq("id", regId);
     if (status === "aprovado" && groupRole) {
       await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "b2b_pendente");
