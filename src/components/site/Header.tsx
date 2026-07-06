@@ -12,7 +12,7 @@ export function Header() {
   const [q, setQ] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const { count } = useCart();
-  const { user, isStaff, isB2BApproved } = useSession();
+  const { user, isStaff, isSalesRep, isB2BApproved } = useSession();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
 
   function submit(e: React.FormEvent) {
@@ -73,6 +73,11 @@ export function Header() {
               <Link to="/conta" className="hidden items-center gap-1 rounded px-2 py-1 text-sm hover:text-primary md:flex">
                 <User className="h-4 w-4" /> Minha Conta
               </Link>
+              {isSalesRep && (
+                <Link to="/vendedor" className="hidden items-center gap-1 rounded bg-hot px-2 py-1 text-xs font-bold uppercase text-hot-foreground md:flex">
+                  Vendedor
+                </Link>
+              )}
               {isStaff && (
                 <Link to="/admin" className="hidden items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-bold uppercase text-primary-foreground md:flex">
                   <Wrench className="h-3 w-3" /> Admin

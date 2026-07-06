@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          latency_ms: number | null
+          recommended_action: Json | null
+          role: string
+          session_id: string
+          suggestions: Json | null
+          tokens_in: number | null
+          tokens_out: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          recommended_action?: Json | null
+          role: string
+          session_id: string
+          suggestions?: Json | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          recommended_action?: Json | null
+          role?: string
+          session_id?: string
+          suggestions?: Json | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_chat_sessions: {
+        Row: {
+          created_at: string
+          customer_group: string | null
+          id: string
+          page_context: string | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          user_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_group?: string | null
+          id?: string
+          page_context?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_group?: string | null
+          id?: string
+          page_context?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Relationships: []
+      }
       ai_knowledge_base: {
         Row: {
           active: boolean
@@ -81,6 +161,53 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: true
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_tool_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          input: Json | null
+          latency_ms: number | null
+          output: Json | null
+          session_id: string | null
+          status: string
+          tool_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json | null
+          latency_ms?: number | null
+          output?: Json | null
+          session_id?: string | null
+          status?: string
+          tool_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          input?: Json | null
+          latency_ms?: number | null
+          output?: Json | null
+          session_id?: string | null
+          status?: string
+          tool_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_tool_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -628,7 +755,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          b2b_status: Database["public"]["Enums"]["b2b_approval_status"]
           created_at: string
+          customer_group: Database["public"]["Enums"]["customer_group"]
           full_name: string | null
           id: string
           phone: string | null
@@ -636,7 +765,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          b2b_status?: Database["public"]["Enums"]["b2b_approval_status"]
           created_at?: string
+          customer_group?: Database["public"]["Enums"]["customer_group"]
           full_name?: string | null
           id: string
           phone?: string | null
@@ -644,11 +775,180 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          b2b_status?: Database["public"]["Enums"]["b2b_approval_status"]
           created_at?: string
+          customer_group?: Database["public"]["Enums"]["customer_group"]
           full_name?: string | null
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sales_orders: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          discount: number
+          id: string
+          items: Json
+          lead_cnpj: string | null
+          lead_email: string | null
+          lead_name: string | null
+          lead_phone: string | null
+          notes: string | null
+          order_id: string | null
+          rep_id: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          discount?: number
+          id?: string
+          items?: Json
+          lead_cnpj?: string | null
+          lead_email?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          notes?: string | null
+          order_id?: string | null
+          rep_id: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          discount?: number
+          id?: string
+          items?: Json
+          lead_cnpj?: string | null
+          lead_email?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          notes?: string | null
+          order_id?: string | null
+          rep_id?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_rep_customers: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          id: string
+          lead_cnpj: string | null
+          lead_email: string | null
+          lead_name: string | null
+          lead_phone: string | null
+          notes: string | null
+          rep_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lead_cnpj?: string | null
+          lead_email?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          notes?: string | null
+          rep_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          lead_cnpj?: string | null
+          lead_email?: string | null
+          lead_name?: string | null
+          lead_phone?: string | null
+          notes?: string | null
+          rep_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_rep_customers_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_reps: {
+        Row: {
+          activated_at: string | null
+          active: boolean
+          commission_pct: number
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          active?: boolean
+          commission_pct?: number
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          active?: boolean
+          commission_pct?: number
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -686,18 +986,19 @@ export type Database = {
         Returns: boolean
       }
       is_b2b_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_sales_rep: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role:
-        | "admin"
-        | "gerente"
+      app_role: "admin" | "gerente" | "vendedor" | "cliente"
+      b2b_approval_status: "none" | "pending" | "approved" | "rejected"
+      b2b_status: "pendente" | "aprovado" | "reprovado"
+      customer_group:
         | "b2c"
         | "b2b_pendente"
         | "revendedor"
         | "oficina"
         | "distribuidor"
-      b2b_status: "pendente" | "aprovado" | "reprovado"
       order_status:
         | "rascunho"
         | "aguardando_pagamento"
@@ -842,16 +1143,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: [
-        "admin",
-        "gerente",
+      app_role: ["admin", "gerente", "vendedor", "cliente"],
+      b2b_approval_status: ["none", "pending", "approved", "rejected"],
+      b2b_status: ["pendente", "aprovado", "reprovado"],
+      customer_group: [
         "b2c",
         "b2b_pendente",
         "revendedor",
         "oficina",
         "distribuidor",
       ],
-      b2b_status: ["pendente", "aprovado", "reprovado"],
       order_status: [
         "rascunho",
         "aguardando_pagamento",
