@@ -173,17 +173,23 @@ function BlingModule() {
     onError: (e: any) => toast.error(e.message ?? "Erro"),
   });
 
+  const [busy, setBusy] = useState<string | null>(null);
   const runSync = (fn: () => Promise<any>, label: string) => async () => {
+    if (busy) return;
+    setBusy(label);
+    toast.info(`${label}: sincronização iniciada. Isso pode levar alguns minutos…`);
     try {
       const r: any = await fn();
       if (r?.ok) toast.success(`${label}: ${r.message}`);
       else toast.error(r?.message ?? `${label} falhou`);
     } catch (e: any) {
-      toast.error(e.message ?? "Erro");
+      toast.error(`${label}: ${e?.message ?? "Erro"}`);
     } finally {
+      setBusy(null);
       invalidateAll();
     }
   };
+
 
   const reprocessMut = useMutation({
     mutationFn: (log_id: string) => reprocessFn({ data: { log_id } }),
