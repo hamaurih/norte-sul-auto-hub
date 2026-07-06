@@ -132,11 +132,12 @@ function B2BList() {
     },
   });
 
-  async function decide(regId: string, userId: string, status: "aprovado" | "reprovado", groupRole?: "revendedor" | "oficina" | "distribuidor") {
+  async function decide(regId: string, userId: string, status: "aprovado" | "reprovado", group?: "revendedor" | "oficina" | "distribuidor") {
     await supabase.from("b2b_registrations").update({ status, reviewed_at: new Date().toISOString() }).eq("id", regId);
-    if (status === "aprovado" && groupRole) {
-      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "b2b_pendente");
-      await supabase.from("user_roles").insert({ user_id: userId, role: groupRole });
+    if (status === "aprovado" && group) {
+      await supabase.from("profiles").update({ customer_group: group, b2b_status: "approved" }).eq("id", userId);
+    } else if (status === "reprovado") {
+      await supabase.from("profiles").update({ customer_group: "b2c", b2b_status: "rejected" }).eq("id", userId);
     }
     toast.success(`Cadastro ${status}`);
     qc.invalidateQueries({ queryKey: ["b2b-list"] });
