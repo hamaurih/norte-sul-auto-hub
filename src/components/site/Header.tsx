@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchCategories } from "@/lib/queries";
 import { useCart } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
+import logo from "@/assets/norte-sul-logo.png.asset.json";
 
 export function Header() {
   const navigate = useNavigate();
@@ -44,12 +45,14 @@ export function Header() {
           <Menu className="h-6 w-6" />
         </button>
 
-        <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-primary font-display text-lg font-black text-primary-foreground">NS</div>
-          <div className="hidden leading-tight sm:block">
-            <div className="font-display text-lg font-bold uppercase leading-none">Norte Sul</div>
-            <div className="text-[10px] uppercase tracking-widest text-white/60">Acessórios</div>
-          </div>
+        <Link to="/" className="group flex items-center" aria-label="Norte Sul Acessórios - Início">
+          <img
+            src={logo.url}
+            alt="Norte Sul Acessórios e Peças"
+            className="h-14 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105 md:h-16"
+            loading="eager"
+            decoding="async"
+          />
         </Link>
 
         <form onSubmit={submit} className="ml-auto flex flex-1 max-w-2xl items-center rounded-md bg-white text-foreground">

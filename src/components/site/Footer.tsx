@@ -1,18 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import logo from "@/assets/norte-sul-logo.png.asset.json";
 
 export function Footer() {
   return (
     <footer className="mt-16 border-t border-border bg-secondary text-secondary-foreground">
       <div className="container-x grid gap-8 py-10 md:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-md bg-primary font-display text-lg font-black text-primary-foreground">NS</div>
-            <div>
-              <div className="font-display text-lg font-bold uppercase leading-none">Norte Sul</div>
-              <div className="text-[10px] uppercase tracking-widest text-white/60">Acessórios Automotivos</div>
-            </div>
-          </div>
+          <img
+            src={logo.url}
+            alt="Norte Sul Acessórios e Peças"
+            className="h-24 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
+            loading="lazy"
+            decoding="async"
+          />
           <p className="mt-3 text-sm text-white/70">
             Som, iluminação, performance e segurança para todo tipo de carro. Atacado e varejo com entrega em todo o Brasil.
           </p>
