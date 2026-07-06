@@ -18,9 +18,16 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
+import { Route as AuthenticatedVendedorRouteImport } from './routes/_authenticated/vendedor'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedContaRouteImport } from './routes/_authenticated/conta'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedVendedorIndexRouteImport } from './routes/_authenticated/vendedor.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './routes/_authenticated/vendedor.pedido-assistido'
+import { Route as AuthenticatedVendedorMeusPedidosRouteImport } from './routes/_authenticated/vendedor.meus-pedidos'
+import { Route as AuthenticatedVendedorClientesRouteImport } from './routes/_authenticated/vendedor.clientes'
+import { Route as AuthenticatedAdminVendedoresRouteImport } from './routes/_authenticated/admin.vendedores'
+import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -66,6 +73,11 @@ const ProdutoSlugRoute = ProdutoSlugRouteImport.update({
   path: '/produto/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedVendedorRoute = AuthenticatedVendedorRouteImport.update({
+  id: '/vendedor',
+  path: '/vendedor',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -76,11 +88,47 @@ const AuthenticatedContaRoute = AuthenticatedContaRouteImport.update({
   path: '/conta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AuthenticatedVendedorIndexRoute =
+  AuthenticatedVendedorIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedVendedorRoute,
+  } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedVendedorPedidoAssistidoRoute =
+  AuthenticatedVendedorPedidoAssistidoRouteImport.update({
+    id: '/pedido-assistido',
+    path: '/pedido-assistido',
+    getParentRoute: () => AuthenticatedVendedorRoute,
+  } as any)
+const AuthenticatedVendedorMeusPedidosRoute =
+  AuthenticatedVendedorMeusPedidosRouteImport.update({
+    id: '/meus-pedidos',
+    path: '/meus-pedidos',
+    getParentRoute: () => AuthenticatedVendedorRoute,
+  } as any)
+const AuthenticatedVendedorClientesRoute =
+  AuthenticatedVendedorClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedVendedorRoute,
+  } as any)
+const AuthenticatedAdminVendedoresRoute =
+  AuthenticatedAdminVendedoresRouteImport.update({
+    id: '/admin/vendedores',
+    path: '/admin/vendedores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminVendedoresNovoRoute =
+  AuthenticatedAdminVendedoresNovoRouteImport.update({
+    id: '/novo',
+    path: '/novo',
+    getParentRoute: () => AuthenticatedAdminVendedoresRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -90,10 +138,17 @@ export interface FileRoutesByFullPath {
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
+  '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
+  '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
+  '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,10 +158,16 @@ export interface FileRoutesByTo {
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/conta': typeof AuthenticatedContaRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
+  '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
+  '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
+  '/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/vendedor': typeof AuthenticatedVendedorIndexRoute
+  '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,10 +179,17 @@ export interface FileRoutesById {
   '/catalogo': typeof CatalogoRoute
   '/checkout': typeof CheckoutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/conta': typeof AuthenticatedContaRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
+  '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
+  '/_authenticated/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
+  '/_authenticated/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
+  '/_authenticated/vendedor/pedido-assistido': typeof AuthenticatedVendedorPedidoAssistidoRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/vendedor/': typeof AuthenticatedVendedorIndexRoute
+  '/_authenticated/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,10 +201,17 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/checkout'
     | '/sitemap.xml'
-    | '/admin'
     | '/conta'
     | '/pedidos'
+    | '/vendedor'
     | '/produto/$slug'
+    | '/admin/vendedores'
+    | '/vendedor/clientes'
+    | '/vendedor/meus-pedidos'
+    | '/vendedor/pedido-assistido'
+    | '/admin/'
+    | '/vendedor/'
+    | '/admin/vendedores/novo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -146,10 +221,16 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/checkout'
     | '/sitemap.xml'
-    | '/admin'
     | '/conta'
     | '/pedidos'
     | '/produto/$slug'
+    | '/admin/vendedores'
+    | '/vendedor/clientes'
+    | '/vendedor/meus-pedidos'
+    | '/vendedor/pedido-assistido'
+    | '/admin'
+    | '/vendedor'
+    | '/admin/vendedores/novo'
   id:
     | '__root__'
     | '/'
@@ -160,10 +241,17 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/checkout'
     | '/sitemap.xml'
-    | '/_authenticated/admin'
     | '/_authenticated/conta'
     | '/_authenticated/pedidos'
+    | '/_authenticated/vendedor'
     | '/produto/$slug'
+    | '/_authenticated/admin/vendedores'
+    | '/_authenticated/vendedor/clientes'
+    | '/_authenticated/vendedor/meus-pedidos'
+    | '/_authenticated/vendedor/pedido-assistido'
+    | '/_authenticated/admin/'
+    | '/_authenticated/vendedor/'
+    | '/_authenticated/admin/vendedores/novo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/vendedor': {
+      id: '/_authenticated/vendedor'
+      path: '/vendedor'
+      fullPath: '/vendedor'
+      preLoaderRoute: typeof AuthenticatedVendedorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos': {
       id: '/_authenticated/pedidos'
       path: '/pedidos'
@@ -257,26 +352,108 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
+    '/_authenticated/vendedor/': {
+      id: '/_authenticated/vendedor/'
+      path: '/'
+      fullPath: '/vendedor/'
+      preLoaderRoute: typeof AuthenticatedVendedorIndexRouteImport
+      parentRoute: typeof AuthenticatedVendedorRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
       path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vendedor/pedido-assistido': {
+      id: '/_authenticated/vendedor/pedido-assistido'
+      path: '/pedido-assistido'
+      fullPath: '/vendedor/pedido-assistido'
+      preLoaderRoute: typeof AuthenticatedVendedorPedidoAssistidoRouteImport
+      parentRoute: typeof AuthenticatedVendedorRoute
+    }
+    '/_authenticated/vendedor/meus-pedidos': {
+      id: '/_authenticated/vendedor/meus-pedidos'
+      path: '/meus-pedidos'
+      fullPath: '/vendedor/meus-pedidos'
+      preLoaderRoute: typeof AuthenticatedVendedorMeusPedidosRouteImport
+      parentRoute: typeof AuthenticatedVendedorRoute
+    }
+    '/_authenticated/vendedor/clientes': {
+      id: '/_authenticated/vendedor/clientes'
+      path: '/clientes'
+      fullPath: '/vendedor/clientes'
+      preLoaderRoute: typeof AuthenticatedVendedorClientesRouteImport
+      parentRoute: typeof AuthenticatedVendedorRoute
+    }
+    '/_authenticated/admin/vendedores': {
+      id: '/_authenticated/admin/vendedores'
+      path: '/admin/vendedores'
+      fullPath: '/admin/vendedores'
+      preLoaderRoute: typeof AuthenticatedAdminVendedoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/vendedores/novo': {
+      id: '/_authenticated/admin/vendedores/novo'
+      path: '/novo'
+      fullPath: '/admin/vendedores/novo'
+      preLoaderRoute: typeof AuthenticatedAdminVendedoresNovoRouteImport
+      parentRoute: typeof AuthenticatedAdminVendedoresRoute
     }
   }
 }
 
+interface AuthenticatedVendedorRouteChildren {
+  AuthenticatedVendedorClientesRoute: typeof AuthenticatedVendedorClientesRoute
+  AuthenticatedVendedorMeusPedidosRoute: typeof AuthenticatedVendedorMeusPedidosRoute
+  AuthenticatedVendedorPedidoAssistidoRoute: typeof AuthenticatedVendedorPedidoAssistidoRoute
+  AuthenticatedVendedorIndexRoute: typeof AuthenticatedVendedorIndexRoute
+}
+
+const AuthenticatedVendedorRouteChildren: AuthenticatedVendedorRouteChildren = {
+  AuthenticatedVendedorClientesRoute: AuthenticatedVendedorClientesRoute,
+  AuthenticatedVendedorMeusPedidosRoute: AuthenticatedVendedorMeusPedidosRoute,
+  AuthenticatedVendedorPedidoAssistidoRoute:
+    AuthenticatedVendedorPedidoAssistidoRoute,
+  AuthenticatedVendedorIndexRoute: AuthenticatedVendedorIndexRoute,
+}
+
+const AuthenticatedVendedorRouteWithChildren =
+  AuthenticatedVendedorRoute._addFileChildren(
+    AuthenticatedVendedorRouteChildren,
+  )
+
+interface AuthenticatedAdminVendedoresRouteChildren {
+  AuthenticatedAdminVendedoresNovoRoute: typeof AuthenticatedAdminVendedoresNovoRoute
+}
+
+const AuthenticatedAdminVendedoresRouteChildren: AuthenticatedAdminVendedoresRouteChildren =
+  {
+    AuthenticatedAdminVendedoresNovoRoute:
+      AuthenticatedAdminVendedoresNovoRoute,
+  }
+
+const AuthenticatedAdminVendedoresRouteWithChildren =
+  AuthenticatedAdminVendedoresRoute._addFileChildren(
+    AuthenticatedAdminVendedoresRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedContaRoute: typeof AuthenticatedContaRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedVendedorRoute: typeof AuthenticatedVendedorRouteWithChildren
+  AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedContaRoute: AuthenticatedContaRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedVendedorRoute: AuthenticatedVendedorRouteWithChildren,
+  AuthenticatedAdminVendedoresRoute:
+    AuthenticatedAdminVendedoresRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -296,13 +473,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
