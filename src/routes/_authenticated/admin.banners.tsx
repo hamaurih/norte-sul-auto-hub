@@ -32,7 +32,7 @@ function BannersList() {
   const upsert = useServerFn(bannerUpsert);
   const del = useServerFn(bannerDelete);
   const toggle = useServerFn(bannerToggle);
-  const [editing, setEditing] = useState<(BannerInput & { id?: string }) | null>(null);
+  const [editing, setEditing] = useState<BannerInput | null>(null);
   const [saving, setSaving] = useState(false);
 
   const { data = [] } = useQuery({
