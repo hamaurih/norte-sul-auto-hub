@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingCart, Zap } from "lucide-react";
+import { ShoppingCart, Zap, Car } from "lucide-react";
 import { brl } from "@/lib/format";
 import { cartStore } from "@/lib/cart-store";
 import { displayPrice, primaryImage, type ProductRow } from "@/lib/queries";
@@ -28,8 +28,11 @@ export function ProductCard({ p, isB2B }: { p: ProductRow; isB2B: boolean }) {
             className="h-full w-full object-cover transition group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground text-xs">
-            sem imagem
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted via-muted to-secondary/10 text-muted-foreground">
+            <Car className="h-10 w-10 opacity-40" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider opacity-60">
+              Norte Sul
+            </span>
           </div>
         )}
         {off && (

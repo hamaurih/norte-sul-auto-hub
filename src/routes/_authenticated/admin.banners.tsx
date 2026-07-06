@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin/banners")({
   component: BannersList,
 });
 
-const POSITIONS = ["home_hero", "categoria", "b2b", "promocao", "rodape"];
+const POSITIONS = ["home_hero", "home_mini", "categoria", "b2b", "promocao", "rodape"];
 
 function emptyBanner(): BannerInput {
   return {
