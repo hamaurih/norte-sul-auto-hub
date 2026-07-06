@@ -599,6 +599,7 @@ function SyncCard({
   stats,
   actionLabel,
   onSync,
+  pending,
   children,
 }: {
   title: string;
@@ -607,6 +608,7 @@ function SyncCard({
   stats?: { label: string; value: number }[];
   actionLabel: string;
   onSync: () => void;
+  pending?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -617,8 +619,9 @@ function SyncCard({
           <p className="text-xs text-muted-foreground">{description}</p>
           <p className="mt-1 text-xs text-muted-foreground">Última atualização: {fmt(lastSync)}</p>
         </div>
-        <Button size="sm" onClick={onSync}>
-          <RefreshCcw className="mr-1 h-4 w-4" /> {actionLabel}
+        <Button size="sm" onClick={onSync} disabled={pending}>
+          <RefreshCcw className={`mr-1 h-4 w-4 ${pending ? "animate-spin" : ""}`} />
+          {pending ? "Sincronizando…" : actionLabel}
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -637,6 +640,7 @@ function SyncCard({
     </Card>
   );
 }
+
 
 function ErrorList({ logs, onReprocess }: { logs: BlingLog[]; onReprocess: (id: string) => void }) {
   if (logs.length === 0) return <p className="text-xs text-muted-foreground">Nenhum erro registrado.</p>;
