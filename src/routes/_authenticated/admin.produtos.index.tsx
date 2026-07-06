@@ -8,7 +8,7 @@ import { brl } from "@/lib/format";
 import { productDelete, productDuplicate, productToggle } from "@/lib/products.functions";
 import { Plus, Pencil, Copy, Trash2, Search } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/produtos")({
+export const Route = createFileRoute("/_authenticated/admin/produtos/")({
   head: () => ({ meta: [{ title: "Produtos · Admin" }] }),
   component: ProductsList,
 });
