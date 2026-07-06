@@ -300,6 +300,7 @@ function BlingModule() {
             ]}
             actionLabel="Sincronizar produtos"
             onSync={runSync(syncProducts, "Produtos")}
+            pending={busy === "Produtos"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "produto" && l.status === "erro")}
@@ -316,6 +317,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar imagens"
             onSync={runSync(syncImages, "Imagens")}
+            pending={busy === "Imagens"}
           >
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
@@ -342,6 +344,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar estoque"
             onSync={runSync(syncStock, "Estoque")}
+            pending={busy === "Estoque"}
           >
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
@@ -368,6 +371,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar preços"
             onSync={runSync(syncPrices, "Preços")}
+            pending={busy === "Preços"}
           >
             <Toggle
               label="Bling controla preço B2C"
@@ -401,6 +405,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Enviar pedidos pendentes"
             onSync={runSync(sendOrders, "Pedidos")}
+            pending={busy === "Pedidos"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "pedido" && l.status === "erro")}
@@ -417,6 +422,7 @@ function BlingModule() {
             lastSync={null}
             actionLabel="Sincronizar clientes"
             onSync={runSync(syncCustomers, "Clientes")}
+            pending={busy === "Clientes"}
           >
             <ErrorList
               logs={(logs.data ?? []).filter((l) => l.entity === "cliente" && l.status === "erro")}
