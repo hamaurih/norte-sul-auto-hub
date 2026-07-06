@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -35,18 +35,6 @@ import {
 import { useSession } from "@/lib/session";
 
 export const Route = createFileRoute("/")({
-  loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData({ queryKey: ["banners"], queryFn: fetchBanners }),
-      context.queryClient.ensureQueryData({ queryKey: ["mini-banners"], queryFn: fetchMiniBanners }),
-      context.queryClient.ensureQueryData({ queryKey: ["categories"], queryFn: fetchCategories }),
-      context.queryClient.ensureQueryData({ queryKey: ["offers"], queryFn: fetchOffers }),
-      context.queryClient.ensureQueryData({ queryKey: ["new"], queryFn: fetchNewArrivals }),
-      context.queryClient.ensureQueryData({ queryKey: ["best"], queryFn: fetchBestSellers }),
-      context.queryClient.ensureQueryData({ queryKey: ["featured"], queryFn: fetchFeatured }),
-      context.queryClient.ensureQueryData({ queryKey: ["brands"], queryFn: fetchBrands }),
-    ]);
-  },
   head: () => ({
     meta: [
       { title: "Norte Sul Acessórios · Loja e Atacado Automotivo" },
@@ -57,7 +45,11 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: Home,
+  component: () => (
+    <ClientOnly fallback={<HomeFallback />}>
+      <Home />
+    </ClientOnly>
+  ),
 });
 
 /* ------------------------------------------------------------------ */
@@ -107,6 +99,31 @@ function RailSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function HomeFallback() {
+  return (
+    <div>
+      <div className="pt-4">
+        <section className="container-x">
+          <div className="aspect-[21/9] w-full animate-pulse rounded-lg bg-muted md:aspect-[16/6]" />
+        </section>
+      </div>
+      <section className="container-x mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+        {["Frete Brasil", "10x sem juros", "PIX 5% OFF", "Compra segura"].map((label) => (
+          <div key={label} className="h-10 animate-pulse rounded-lg border border-border bg-card" />
+        ))}
+      </section>
+      <section className="container-x mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="aspect-[16/10] animate-pulse rounded-xl bg-muted" />
+        ))}
+      </section>
+      <SectionShell title="Lançamentos" subtitle="Chegou primeiro na Norte Sul">
+        <RailSkeleton />
+      </SectionShell>
     </div>
   );
 }
