@@ -32,6 +32,7 @@ import { Route as AuthenticatedAdminPromocoesRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminMarcasRouteImport } from './routes/_authenticated/admin.marcas'
+import { Route as AuthenticatedAdminCuponsRouteImport } from './routes/_authenticated/admin.cupons'
 import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin.clientes'
 import { Route as AuthenticatedAdminCategoriasRouteImport } from './routes/_authenticated/admin.categorias'
 import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_authenticated/admin.cadastros-b2b'
@@ -161,6 +162,12 @@ const AuthenticatedAdminMarcasRoute =
     path: '/marcas',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCuponsRoute =
+  AuthenticatedAdminCuponsRouteImport.update({
+    id: '/cupons',
+    path: '/cupons',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminClientesRoute =
   AuthenticatedAdminClientesRouteImport.update({
     id: '/clientes',
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
   '/_authenticated/admin/categorias': typeof AuthenticatedAdminCategoriasRoute
   '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/cadastros-b2b'
     | '/admin/categorias'
     | '/admin/clientes'
+    | '/admin/cupons'
     | '/admin/marcas'
     | '/admin/pedidos'
     | '/admin/produtos'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/admin/cadastros-b2b'
     | '/admin/categorias'
     | '/admin/clientes'
+    | '/admin/cupons'
     | '/admin/marcas'
     | '/admin/pedidos'
     | '/admin/produtos'
@@ -355,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cadastros-b2b'
     | '/_authenticated/admin/categorias'
     | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/cupons'
     | '/_authenticated/admin/marcas'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/produtos'
@@ -543,6 +556,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMarcasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cupons': {
+      id: '/_authenticated/admin/cupons'
+      path: '/cupons'
+      fullPath: '/admin/cupons'
+      preLoaderRoute: typeof AuthenticatedAdminCuponsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/clientes': {
       id: '/_authenticated/admin/clientes'
       path: '/clientes'
@@ -601,6 +621,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCadastrosB2bRoute: typeof AuthenticatedAdminCadastrosB2bRoute
   AuthenticatedAdminCategoriasRoute: typeof AuthenticatedAdminCategoriasRoute
   AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminCuponsRoute: typeof AuthenticatedAdminCuponsRoute
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
@@ -614,6 +635,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCadastrosB2bRoute: AuthenticatedAdminCadastrosB2bRoute,
   AuthenticatedAdminCategoriasRoute: AuthenticatedAdminCategoriasRoute,
   AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+  AuthenticatedAdminCuponsRoute: AuthenticatedAdminCuponsRoute,
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
