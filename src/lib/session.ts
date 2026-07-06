@@ -53,6 +53,7 @@ export function useSession(): SessionState {
       const customerGroup = (profile?.customer_group ?? "b2c") as CustomerGroup;
       const b2bStatus = (profile?.b2b_status ?? "none") as B2BStatus;
       const isStaff = roles.some((r) => r === "admin" || r === "gerente");
+      const isAdmin = roles.some((r) => r === "admin");
       const isSalesRep = roles.some((r) => r === "vendedor");
       const b2bGroup = ["revendedor", "oficina", "distribuidor"].includes(customerGroup);
       if (!cancelled)
