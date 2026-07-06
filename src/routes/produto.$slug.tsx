@@ -184,7 +184,7 @@ function ProductPage() {
                 <li key={i} className="rounded bg-muted px-3 py-2">
                   <b>{a.vehicle_make} {a.vehicle_model}</b>
                   {a.year_from && a.year_to && <> · {a.year_from}–{a.year_to}</>}
-                  {"notes" in a && a.notes && <span className="ml-2 text-muted-foreground">{String(a.notes)}</span>}
+                  
                 </li>
               ))}
             </ul>
