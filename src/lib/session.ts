@@ -61,6 +61,7 @@ export function useSession(): SessionState {
           user: session.user,
           session,
           loading: false,
+          isAdmin,
           isStaff,
           isSalesRep,
           isB2BApproved: isStaff || (b2bGroup && b2bStatus === "approved"),
