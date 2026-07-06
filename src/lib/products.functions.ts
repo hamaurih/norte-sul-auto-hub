@@ -86,7 +86,8 @@ export const productToggle = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; field: "active" | "featured" | "is_new" | "is_bestseller" | "is_offer"; value: boolean }) => input)
   .handler(async ({ data, context }) => {
     await assertStaff(context.supabase, context.userId);
-    const { error } = await context.supabase.from("products").update({ [data.field]: data.value }).eq("id", data.id);
+    const patch: Record<string, boolean> = { [data.field]: data.value };
+    const { error } = await context.supabase.from("products").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
