@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { productUpsert, type ProductInput } from "@/lib/products.functions";
 import { slugify } from "@/lib/format";
-import { Trash2, ArrowUp, ArrowDown, Star, Plus } from "lucide-react";
+import { Trash2, ArrowUp, ArrowDown, Star, Plus, Upload, Loader2 } from "lucide-react";
 
 type Img = { url: string; alt?: string | null; is_primary?: boolean };
 
