@@ -50,7 +50,7 @@ function ProductPage() {
   });
 
   const price = displayPrice(product, isB2BApproved);
-  const images = (product.images ?? []).slice().sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
+  const images = (product.images ?? []).slice().sort((a: { is_primary: boolean }, b: { is_primary: boolean }) => Number(b.is_primary) - Number(a.is_primary));
   const currentImg = images[imgIdx]?.url ?? primaryImage(product);
   const inStock = product.stock > 0;
   const waMsg = encodeURIComponent(`Olá, tenho dúvidas sobre ${product.name} (SKU ${product.sku})`);
