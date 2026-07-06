@@ -34,20 +34,18 @@ import {
 } from "@/lib/queries";
 import { useSession } from "@/lib/session";
 
-const HOME_QUERIES = [
-  { queryKey: ["banners"], queryFn: fetchBanners },
-  { queryKey: ["mini-banners"], queryFn: fetchMiniBanners },
-  { queryKey: ["categories"], queryFn: fetchCategories },
-  { queryKey: ["offers"], queryFn: fetchOffers },
-  { queryKey: ["new"], queryFn: fetchNewArrivals },
-  { queryKey: ["best"], queryFn: fetchBestSellers },
-  { queryKey: ["featured"], queryFn: fetchFeatured },
-  { queryKey: ["brands"], queryFn: fetchBrands },
-];
-
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    await Promise.all(HOME_QUERIES.map((query) => context.queryClient.ensureQueryData(query)));
+    await Promise.all([
+      context.queryClient.ensureQueryData({ queryKey: ["banners"], queryFn: fetchBanners }),
+      context.queryClient.ensureQueryData({ queryKey: ["mini-banners"], queryFn: fetchMiniBanners }),
+      context.queryClient.ensureQueryData({ queryKey: ["categories"], queryFn: fetchCategories }),
+      context.queryClient.ensureQueryData({ queryKey: ["offers"], queryFn: fetchOffers }),
+      context.queryClient.ensureQueryData({ queryKey: ["new"], queryFn: fetchNewArrivals }),
+      context.queryClient.ensureQueryData({ queryKey: ["best"], queryFn: fetchBestSellers }),
+      context.queryClient.ensureQueryData({ queryKey: ["featured"], queryFn: fetchFeatured }),
+      context.queryClient.ensureQueryData({ queryKey: ["brands"], queryFn: fetchBrands }),
+    ]);
   },
   head: () => ({
     meta: [
