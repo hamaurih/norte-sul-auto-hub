@@ -46,9 +46,11 @@ import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminEcossistemaIndexRouteImport } from './routes/_authenticated/admin.ecossistema.index'
+import { Route as ApiPublicBlingCallbackRouteImport } from './routes/api/public/bling.callback'
 import { Route as AuthenticatedAdminVendedoresNovoRouteImport } from './routes/_authenticated/admin.vendedores.novo'
 import { Route as AuthenticatedAdminProdutosNovoRouteImport } from './routes/_authenticated/admin.produtos.novo'
 import { Route as AuthenticatedAdminProdutosIdRouteImport } from './routes/_authenticated/admin.produtos.$id'
+import { Route as AuthenticatedAdminEcossistemaBlingRouteImport } from './routes/_authenticated/admin.ecossistema.bling'
 import { Route as AuthenticatedAdminEcossistemaSlugRouteImport } from './routes/_authenticated/admin.ecossistema.$slug'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -256,6 +258,11 @@ const AuthenticatedAdminEcossistemaIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdminEcossistemaRoute,
   } as any)
+const ApiPublicBlingCallbackRoute = ApiPublicBlingCallbackRouteImport.update({
+  id: '/api/public/bling/callback',
+  path: '/api/public/bling/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminVendedoresNovoRoute =
   AuthenticatedAdminVendedoresNovoRouteImport.update({
     id: '/novo',
@@ -273,6 +280,12 @@ const AuthenticatedAdminProdutosIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminProdutosRoute,
+  } as any)
+const AuthenticatedAdminEcossistemaBlingRoute =
+  AuthenticatedAdminEcossistemaBlingRouteImport.update({
+    id: '/bling',
+    path: '/bling',
+    getParentRoute: () => AuthenticatedAdminEcossistemaRoute,
   } as any)
 const AuthenticatedAdminEcossistemaSlugRoute =
   AuthenticatedAdminEcossistemaSlugRouteImport.update({
@@ -318,9 +331,11 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/vendedor/': typeof AuthenticatedVendedorIndexRoute
   '/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
+  '/admin/ecossistema/bling': typeof AuthenticatedAdminEcossistemaBlingRoute
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/api/public/bling/callback': typeof ApiPublicBlingCallbackRoute
   '/admin/ecossistema/': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRoutesByTo {
@@ -357,9 +372,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/vendedor': typeof AuthenticatedVendedorIndexRoute
   '/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
+  '/admin/ecossistema/bling': typeof AuthenticatedAdminEcossistemaBlingRoute
   '/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/api/public/bling/callback': typeof ApiPublicBlingCallbackRoute
   '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRoutesById {
@@ -401,9 +418,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/vendedor/': typeof AuthenticatedVendedorIndexRoute
   '/_authenticated/admin/ecossistema/$slug': typeof AuthenticatedAdminEcossistemaSlugRoute
+  '/_authenticated/admin/ecossistema/bling': typeof AuthenticatedAdminEcossistemaBlingRoute
   '/_authenticated/admin/produtos/$id': typeof AuthenticatedAdminProdutosIdRoute
   '/_authenticated/admin/produtos/novo': typeof AuthenticatedAdminProdutosNovoRoute
   '/_authenticated/admin/vendedores/novo': typeof AuthenticatedAdminVendedoresNovoRoute
+  '/api/public/bling/callback': typeof ApiPublicBlingCallbackRoute
   '/_authenticated/admin/ecossistema/': typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 export interface FileRouteTypes {
@@ -445,9 +464,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/vendedor/'
     | '/admin/ecossistema/$slug'
+    | '/admin/ecossistema/bling'
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
+    | '/api/public/bling/callback'
     | '/admin/ecossistema/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -484,9 +505,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/vendedor'
     | '/admin/ecossistema/$slug'
+    | '/admin/ecossistema/bling'
     | '/admin/produtos/$id'
     | '/admin/produtos/novo'
     | '/admin/vendedores/novo'
+    | '/api/public/bling/callback'
     | '/admin/ecossistema'
   id:
     | '__root__'
@@ -527,9 +550,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/vendedor/'
     | '/_authenticated/admin/ecossistema/$slug'
+    | '/_authenticated/admin/ecossistema/bling'
     | '/_authenticated/admin/produtos/$id'
     | '/_authenticated/admin/produtos/novo'
     | '/_authenticated/admin/vendedores/novo'
+    | '/api/public/bling/callback'
     | '/_authenticated/admin/ecossistema/'
   fileRoutesById: FileRoutesById
 }
@@ -547,6 +572,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ProdutoSlugRoute: typeof ProdutoSlugRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicBlingCallbackRoute: typeof ApiPublicBlingCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -810,6 +836,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEcossistemaIndexRouteImport
       parentRoute: typeof AuthenticatedAdminEcossistemaRoute
     }
+    '/api/public/bling/callback': {
+      id: '/api/public/bling/callback'
+      path: '/api/public/bling/callback'
+      fullPath: '/api/public/bling/callback'
+      preLoaderRoute: typeof ApiPublicBlingCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/vendedores/novo': {
       id: '/_authenticated/admin/vendedores/novo'
       path: '/novo'
@@ -831,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProdutosIdRouteImport
       parentRoute: typeof AuthenticatedAdminProdutosRoute
     }
+    '/_authenticated/admin/ecossistema/bling': {
+      id: '/_authenticated/admin/ecossistema/bling'
+      path: '/bling'
+      fullPath: '/admin/ecossistema/bling'
+      preLoaderRoute: typeof AuthenticatedAdminEcossistemaBlingRouteImport
+      parentRoute: typeof AuthenticatedAdminEcossistemaRoute
+    }
     '/_authenticated/admin/ecossistema/$slug': {
       id: '/_authenticated/admin/ecossistema/$slug'
       path: '/$slug'
@@ -843,6 +883,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminEcossistemaRouteChildren {
   AuthenticatedAdminEcossistemaSlugRoute: typeof AuthenticatedAdminEcossistemaSlugRoute
+  AuthenticatedAdminEcossistemaBlingRoute: typeof AuthenticatedAdminEcossistemaBlingRoute
   AuthenticatedAdminEcossistemaIndexRoute: typeof AuthenticatedAdminEcossistemaIndexRoute
 }
 
@@ -850,6 +891,8 @@ const AuthenticatedAdminEcossistemaRouteChildren: AuthenticatedAdminEcossistemaR
   {
     AuthenticatedAdminEcossistemaSlugRoute:
       AuthenticatedAdminEcossistemaSlugRoute,
+    AuthenticatedAdminEcossistemaBlingRoute:
+      AuthenticatedAdminEcossistemaBlingRoute,
     AuthenticatedAdminEcossistemaIndexRoute:
       AuthenticatedAdminEcossistemaIndexRoute,
   }
@@ -983,6 +1026,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ProdutoSlugRoute: ProdutoSlugRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicBlingCallbackRoute: ApiPublicBlingCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
