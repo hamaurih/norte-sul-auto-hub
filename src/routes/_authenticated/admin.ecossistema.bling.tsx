@@ -128,11 +128,21 @@ function BlingModule() {
 
   const connectMut = useMutation({
     mutationFn: async () => {
-      const redirectUri = `${window.location.origin}/api/public/bling/callback`;
+      // Use o domínio publicado como origem do redirect — o Bling exige uma URL fixa
+      // cadastrada no app dele, e o preview do Lovable roda em subdomínios variáveis.
+      const publicOrigin = "https://norte-sul-auto-hub.lovable.app";
+      const redirectUri = `${publicOrigin}/api/public/bling/callback`;
       return authUrlFn({ data: { redirectUri } });
     },
     onSuccess: (r) => {
-      window.location.href = (r as any).url;
+      // Abre em nova aba: o Bling recusa ser carregado dentro do iframe do preview
+      // (X-Frame-Options), então navegar via window.location.href mostra "conexão recusada".
+      const w = window.open((r as any).url, "_blank", "noopener,noreferrer");
+      if (!w) {
+        toast.error("Popup bloqueado. Libere pop-ups para este site e tente novamente.");
+      } else {
+        toast.success("Autorize o acesso na nova aba. Depois volte aqui e clique em Testar conexão.");
+      }
     },
     onError: (e: any) => toast.error(e.message ?? "Erro"),
   });
