@@ -189,59 +189,301 @@ export const updateBlingConfig = createServerFn({ method: "POST" })
   });
 
 /* ================================================================== *
- * Sync stubs — reais serão implementados quando o OAuth estiver ativo.
- * Cada função registra um log e retorna imediatamente.
+ * Bling API v3 — mirror mode (Bling é mestre para produtos/estoque/preço B2C)
  * ================================================================== */
 
-// Cada server fn precisa ser criada no top-level: o code-splitter do TanStack
-// só remove o handler do bundle do cliente quando `createServerFn` é chamado
-// diretamente no escopo do módulo. Fábricas deixariam o handler rodar no
-// navegador — onde `context.supabase` é undefined e explode com
-// "Cannot read properties of undefined (reading 'from')".
-async function runSyncStub(
-  supabase: any,
-  userId: string,
-  entity: "produto" | "imagem" | "estoque" | "preco" | "cliente" | "pedido",
-  action: string,
-) {
-  await assertAdmin(supabase, userId);
+const BLING_API = "https://www.bling.com.br/Api/v3";
+const TOKEN_URL = "https://www.bling.com.br/Api/v3/oauth/token";
+
+async function refreshTokenIfNeeded(supabase: any) {
   const { data: cfg } = await supabase
     .from("bling_config")
-    .select("access_token,expires_at,active")
+    .select("id,access_token,refresh_token,expires_at")
     .limit(1)
     .maybeSingle();
-  const hasToken = !!(cfg?.access_token && cfg.expires_at && new Date(cfg.expires_at) > new Date());
-  const status: "pendente" | "erro" = hasToken ? "pendente" : "erro";
-  const message = hasToken
-    ? `Sincronização de ${entity} enfileirada.`
-    : `Falha: conexão com Bling não estabelecida. Autorize antes de sincronizar ${entity}.`;
-  await log(supabase, { entity, action, status, message });
-  return { ok: hasToken, message };
+  if (!cfg) throw new Error("bling_config não inicializado.");
+  if (!cfg.access_token) throw new Error("Sem access_token. Conecte-se ao Bling primeiro.");
+
+  const expiresAt = cfg.expires_at ? new Date(cfg.expires_at).getTime() : 0;
+  // renova se falta menos de 60s
+  if (expiresAt - Date.now() > 60_000) return cfg.access_token as string;
+
+  if (!cfg.refresh_token) throw new Error("Access token expirado e sem refresh_token. Reautorize.");
+  const clientId = process.env.BLING_CLIENT_ID!;
+  const clientSecret = process.env.BLING_CLIENT_SECRET!;
+  const basic = btoa(`${clientId}:${clientSecret}`);
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${basic}`,
+      Accept: "application/json",
+    },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: cfg.refresh_token }).toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Falha ao renovar token: ${res.status} ${t.slice(0, 200)}`);
+  }
+  const json: any = await res.json();
+  const newExp = new Date(Date.now() + (json.expires_in ?? 3600) * 1000).toISOString();
+  await supabase
+    .from("bling_config")
+    .update({
+      access_token: json.access_token,
+      refresh_token: json.refresh_token ?? cfg.refresh_token,
+      expires_at: newExp,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", cfg.id);
+  return json.access_token as string;
 }
 
+async function blingFetch(token: string, path: string) {
+  const res = await fetch(`${BLING_API}${path}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Bling ${path} → ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return res.json();
+}
+
+function slugify(s: string) {
+  return (s || "produto")
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+async function uniqueSlug(supabase: any, base: string, blingId: string) {
+  let slug = base || `produto-${blingId}`;
+  const { data } = await supabase.from("products").select("id,bling_id").eq("slug", slug).maybeSingle();
+  if (!data || data.bling_id === blingId) return slug;
+  return `${slug}-${blingId}`;
+}
+
+/**
+ * Sincroniza produtos do Bling (modo espelho).
+ * Faz paginação em /produtos e upsert em public.products usando bling_id como chave.
+ */
 export const syncBlingProducts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "produto", "sync_all"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    try {
+      const token = await refreshTokenIfNeeded(sb);
+      let pagina = 1;
+      const limite = 100;
+      let created = 0;
+      let updated = 0;
+      // trava dura de segurança para não rodar infinitamente
+      while (pagina <= 50) {
+        const json: any = await blingFetch(token, `/produtos?pagina=${pagina}&limite=${limite}`);
+        const lista: any[] = json?.data ?? [];
+        if (lista.length === 0) break;
+        for (const p of lista) {
+          const blingId = String(p.id);
+          const nome = p.nome ?? `Produto ${blingId}`;
+          const sku = p.codigo ?? blingId;
+          const preco = Number(p.preco ?? 0);
+          const estoque = Number(p.estoque?.saldoVirtualTotal ?? p.estoque?.saldo ?? 0);
+          const ativo = (p.situacao ?? "A") === "A";
 
+          const { data: existing } = await sb
+            .from("products")
+            .select("id,slug")
+            .eq("bling_id", blingId)
+            .maybeSingle();
+
+          if (existing) {
+            await sb
+              .from("products")
+              .update({
+                name: nome,
+                sku,
+                price_b2c: preco,
+                stock: estoque,
+                active: ativo,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id);
+            updated++;
+          } else {
+            const slug = await uniqueSlug(sb, slugify(nome), blingId);
+            await sb.from("products").insert({
+              bling_id: blingId,
+              sku,
+              name: nome,
+              slug,
+              price_b2c: preco,
+              stock: estoque,
+              active: ativo,
+            });
+            created++;
+          }
+        }
+        if (lista.length < limite) break;
+        pagina++;
+      }
+      const msg = `Sincronizados ${created + updated} produtos (${created} novos, ${updated} atualizados).`;
+      await log(sb, { entity: "produto", action: "sync_all", status: "sucesso", message: msg });
+      return { ok: true, message: msg, created, updated };
+    } catch (e: any) {
+      await log(sb, {
+        entity: "produto",
+        action: "sync_all",
+        status: "erro",
+        message: e?.message?.slice(0, 500) ?? "Erro desconhecido",
+      });
+      throw e;
+    }
+  });
+
+/**
+ * Sincroniza imagens: para cada produto com bling_id, busca detalhe e salva URLs em product_images.
+ */
 export const syncBlingImages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "imagem", "sync_all"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    try {
+      const token = await refreshTokenIfNeeded(sb);
+      const { data: prods } = await sb
+        .from("products")
+        .select("id,bling_id,name")
+        .not("bling_id", "is", null)
+        .limit(500);
+      let total = 0;
+      for (const prod of prods ?? []) {
+        try {
+          const det: any = await blingFetch(token, `/produtos/${prod.bling_id}`);
+          const imgs: any[] = det?.data?.midia?.imagens?.externas ?? det?.data?.imagens ?? [];
+          if (imgs.length === 0) continue;
+          await sb.from("product_images").delete().eq("product_id", prod.id);
+          const rows = imgs.map((img: any, idx: number) => ({
+            product_id: prod.id,
+            url: img.link ?? img.url ?? img,
+            alt: prod.name,
+            sort_order: idx,
+            is_primary: idx === 0,
+          }));
+          await sb.from("product_images").insert(rows);
+          total += rows.length;
+        } catch (err: any) {
+          await log(sb, {
+            entity: "imagem",
+            entity_id: prod.id,
+            action: "sync_one",
+            status: "erro",
+            message: err?.message?.slice(0, 300),
+          });
+        }
+      }
+      const msg = `Sincronizadas ${total} imagens.`;
+      await log(sb, { entity: "imagem", action: "sync_all", status: "sucesso", message: msg });
+      return { ok: true, message: msg };
+    } catch (e: any) {
+      await log(sb, {
+        entity: "imagem",
+        action: "sync_all",
+        status: "erro",
+        message: e?.message?.slice(0, 500),
+      });
+      throw e;
+    }
+  });
+
+/**
+ * Estoque e preços B2C vêm no endpoint /produtos — reutilizamos syncBlingProducts.
+ */
+async function syncFieldsOnly(sb: any, only: "estoque" | "preco") {
+  const token = await refreshTokenIfNeeded(sb);
+  let pagina = 1;
+  const limite = 100;
+  let touched = 0;
+  while (pagina <= 50) {
+    const json: any = await blingFetch(token, `/produtos?pagina=${pagina}&limite=${limite}`);
+    const lista: any[] = json?.data ?? [];
+    if (lista.length === 0) break;
+    for (const p of lista) {
+      const blingId = String(p.id);
+      const patch: any = { updated_at: new Date().toISOString() };
+      if (only === "estoque") patch.stock = Number(p.estoque?.saldoVirtualTotal ?? p.estoque?.saldo ?? 0);
+      if (only === "preco") patch.price_b2c = Number(p.preco ?? 0);
+      const { data } = await sb.from("products").update(patch).eq("bling_id", blingId).select("id");
+      if (data?.length) touched++;
+    }
+    if (lista.length < limite) break;
+    pagina++;
+  }
+  return touched;
+}
 
 export const syncBlingStock = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "estoque", "sync_all"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    try {
+      const n = await syncFieldsOnly(sb, "estoque");
+      const msg = `Estoque atualizado em ${n} produtos.`;
+      await log(sb, { entity: "estoque", action: "sync_all", status: "sucesso", message: msg });
+      return { ok: true, message: msg };
+    } catch (e: any) {
+      await log(sb, { entity: "estoque", action: "sync_all", status: "erro", message: e?.message?.slice(0, 500) });
+      throw e;
+    }
+  });
 
 export const syncBlingPrices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "preco", "sync_all"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = context.supabase as any;
+    try {
+      const n = await syncFieldsOnly(sb, "preco");
+      const msg = `Preços B2C atualizados em ${n} produtos.`;
+      await log(sb, { entity: "preco", action: "sync_all", status: "sucesso", message: msg });
+      return { ok: true, message: msg };
+    } catch (e: any) {
+      await log(sb, { entity: "preco", action: "sync_all", status: "erro", message: e?.message?.slice(0, 500) });
+      throw e;
+    }
+  });
 
 export const syncBlingCustomers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "cliente", "sync_all"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    await log(context.supabase, {
+      entity: "cliente",
+      action: "sync_all",
+      status: "pendente",
+      message: "Sincronização de clientes ainda não implementada (modo espelho foca em produtos).",
+    });
+    return { ok: false, message: "Sincronização de clientes será implementada em fase futura." };
+  });
 
 export const sendPendingOrders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => runSyncStub(context.supabase, context.userId, "pedido", "send_pending"));
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    await log(context.supabase, {
+      entity: "pedido",
+      action: "send_pending",
+      status: "pendente",
+      message: "Envio de pedidos para o Bling ainda não implementado.",
+    });
+    return { ok: false, message: "Envio de pedidos será implementado em fase futura." };
+  });
 
 /* ================================================================== *
  * Reprocess a specific log
