@@ -34,7 +34,7 @@ import {
 } from "@/lib/queries";
 import { useSession } from "@/lib/session";
 
-const HOME_QUERIES = [
+const HOME_QUERIES: { queryKey: readonly string[]; queryFn: () => Promise<unknown> }[] = [
   { queryKey: ["banners"], queryFn: fetchBanners },
   { queryKey: ["mini-banners"], queryFn: fetchMiniBanners },
   { queryKey: ["categories"], queryFn: fetchCategories },
@@ -43,7 +43,7 @@ const HOME_QUERIES = [
   { queryKey: ["best"], queryFn: fetchBestSellers },
   { queryKey: ["featured"], queryFn: fetchFeatured },
   { queryKey: ["brands"], queryFn: fetchBrands },
-] as const;
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
