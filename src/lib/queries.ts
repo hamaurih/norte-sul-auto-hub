@@ -240,6 +240,8 @@ export async function fetchSearchSuggestions(term: string, limit = 8): Promise<S
       image: imgs[0]?.url ?? null,
     };
   });
+}
+
 
 export async function fetchCategories() {
   const { data } = await supabase.from("categories").select("id, name, slug, icon, sort_order").eq("active", true).order("sort_order");
