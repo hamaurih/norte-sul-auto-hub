@@ -23,11 +23,12 @@ function ProductsList() {
   const [filterBrand, setFilterBrand] = useState("");
   const [filterActive, setFilterActive] = useState<"" | "true" | "false">("");
   const [filterStock, setFilterStock] = useState<"" | "in" | "out">("");
+  const [filterPhoto, setFilterPhoto] = useState<"" | "with" | "without">("");
   const [pageSize, setPageSize] = useState(100);
   const [page, setPage] = useState(1);
 
   // reset page when filters change
-  useEffect(() => { setPage(1); }, [q, filterCat, filterBrand, filterActive, filterStock, pageSize]);
+  useEffect(() => { setPage(1); }, [q, filterCat, filterBrand, filterActive, filterStock, filterPhoto, pageSize]);
 
   const { data: brands = [] } = useQuery({ queryKey: ["brands-all"], queryFn: async () => (await supabase.from("brands").select("id,name").order("name")).data ?? [] });
   const { data: cats = [] } = useQuery({ queryKey: ["categories-all"], queryFn: async () => (await supabase.from("categories").select("id,name,parent_id").order("name")).data ?? [] });
