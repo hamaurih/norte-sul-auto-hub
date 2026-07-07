@@ -127,6 +127,7 @@ function ProductsList() {
         <table className="w-full text-sm">
           <thead className="bg-muted text-xs uppercase">
             <tr>
+              <th className="p-2 text-center">Foto</th>
               <th className="p-2 text-left">SKU</th>
               <th className="p-2 text-left">Nome</th>
               <th className="p-2 text-right">Estoque</th>
