@@ -64,8 +64,8 @@ function ProductsList() {
     });
   }, [data, filterPhoto]);
 
-  const rows = data?.rows ?? [];
-  const total = data?.total ?? 0;
+  const rows = filteredRows;
+  const total = filterPhoto ? rows.length : (data?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function handleDelete(id: string, name: string) {
