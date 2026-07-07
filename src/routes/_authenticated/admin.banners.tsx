@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { bannerUpsert, bannerDelete, bannerToggle, type BannerInput } from "@/lib/banners.functions";
@@ -107,7 +107,7 @@ function BannersList() {
               <L label="Subtítulo" full><input value={editing.subtitle ?? ""} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} className={inp} /></L>
               <L label="Imagem desktop (URL) *" full><input required value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} className={inp} /></L>
               <L label="Imagem mobile (URL)" full><input value={editing.image_mobile_url ?? ""} onChange={(e) => setEditing({ ...editing, image_mobile_url: e.target.value })} className={inp} /></L>
-              <L label="Link (URL de destino)"><input value={editing.link_url ?? ""} onChange={(e) => setEditing({ ...editing, link_url: e.target.value })} className={inp} /></L>
+              <div className="md:col-span-2"><LinkBuilder value={editing.link_url ?? ""} onChange={(v) => setEditing({ ...editing, link_url: v })} /></div>
               <L label="Texto do botão (CTA)"><input value={editing.cta_label ?? ""} onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })} className={inp} /></L>
               <L label="Posição">
                 <select value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value })} className={inp}>
@@ -156,5 +156,149 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
       <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">{label}</span>
       {children}
     </label>
+  );
+}
+
+type LinkKind = "none" | "custom" | "category" | "brand" | "product" | "page";
+const PAGES: { label: string; url: string }[] = [
+  { label: "Home", url: "/" },
+  { label: "Catálogo", url: "/catalogo" },
+  { label: "Ofertas", url: "/catalogo?oferta=1" },
+  { label: "Área B2B", url: "/b2b" },
+  { label: "Login / Cadastro", url: "/auth" },
+];
+
+function detectKind(url: string): LinkKind {
+  if (!url) return "none";
+  if (url.startsWith("/produto/")) return "product";
+  if (url.startsWith("/catalogo?categoria=")) return "category";
+  if (url.startsWith("/catalogo?marca=")) return "brand";
+  if (PAGES.some((p) => p.url === url)) return "page";
+  return "custom";
+}
+
+function LinkBuilder({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [kind, setKind] = useState<LinkKind>(() => detectKind(value));
+  const [productQuery, setProductQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+
+  useEffect(() => { const t = setTimeout(() => setDebounced(productQuery.trim()), 250); return () => clearTimeout(t); }, [productQuery]);
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin-banners-categories"],
+    queryFn: async () => (await supabase.from("categories").select("id, name, slug").order("name")).data ?? [],
+  });
+  const { data: brands = [] } = useQuery({
+    queryKey: ["admin-banners-brands"],
+    queryFn: async () => (await supabase.from("brands").select("id, name, slug").order("name")).data ?? [],
+  });
+  const { data: products = [] } = useQuery({
+    queryKey: ["admin-banners-products", debounced],
+    enabled: kind === "product" && debounced.length >= 2,
+    queryFn: async () =>
+      (await supabase.from("products").select("id, name, sku, slug").or(`name.ilike.%${debounced}%,sku.ilike.%${debounced}%`).limit(20)).data ?? [],
+  });
+
+  const currentCat = useMemo(() => (kind === "category" ? value.replace("/catalogo?categoria=", "") : ""), [kind, value]);
+  const currentBrand = useMemo(() => (kind === "brand" ? value.replace("/catalogo?marca=", "") : ""), [kind, value]);
+  const currentProduct = useMemo(() => (kind === "product" ? value.replace("/produto/", "") : ""), [kind, value]);
+
+  function changeKind(k: LinkKind) {
+    setKind(k);
+    if (k === "none") onChange("");
+    else if (k === "custom") onChange(value && detectKind(value) === "custom" ? value : "");
+    else onChange("");
+  }
+
+  return (
+    <div className="rounded border border-border bg-muted/30 p-3">
+      <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">Link do banner (para onde o botão leva)</p>
+      <div className="grid gap-2 md:grid-cols-2">
+        <label className="text-sm">
+          <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Tipo</span>
+          <select value={kind} onChange={(e) => changeKind(e.target.value as LinkKind)} className={inp}>
+            <option value="none">Sem link</option>
+            <option value="category">Categoria</option>
+            <option value="brand">Marca</option>
+            <option value="product">Produto específico</option>
+            <option value="page">Página do site</option>
+            <option value="custom">URL personalizada</option>
+          </select>
+        </label>
+
+        {kind === "category" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Categoria</span>
+            <select value={currentCat} onChange={(e) => onChange(e.target.value ? `/catalogo?categoria=${e.target.value}` : "")} className={inp}>
+              <option value="">Escolha uma categoria...</option>
+              {categories.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+            </select>
+          </label>
+        )}
+
+        {kind === "brand" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Marca</span>
+            <select value={currentBrand} onChange={(e) => onChange(e.target.value ? `/catalogo?marca=${e.target.value}` : "")} className={inp}>
+              <option value="">Escolha uma marca...</option>
+              {brands.map((b: any) => <option key={b.id} value={b.slug}>{b.name}</option>)}
+            </select>
+          </label>
+        )}
+
+        {kind === "page" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">Página</span>
+            <select value={value} onChange={(e) => onChange(e.target.value)} className={inp}>
+              <option value="">Escolha uma página...</option>
+              {PAGES.map((p) => <option key={p.url} value={p.url}>{p.label}</option>)}
+            </select>
+          </label>
+        )}
+
+        {kind === "custom" && (
+          <label className="text-sm">
+            <span className="mb-1 block text-xs font-bold uppercase text-muted-foreground">URL</span>
+            <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="/catalogo?q=farol" className={inp} />
+          </label>
+        )}
+      </div>
+
+      {kind === "product" && (
+        <div className="mt-2 space-y-2">
+          <input
+            value={productQuery}
+            onChange={(e) => setProductQuery(e.target.value)}
+            placeholder="Buscar produto por nome ou SKU..."
+            className={inp}
+          />
+          {currentProduct && !productQuery && (
+            <p className="text-xs text-muted-foreground">Selecionado: <code className="rounded bg-muted px-1">/produto/{currentProduct}</code></p>
+          )}
+          {debounced.length >= 2 && (
+            <div className="max-h-48 overflow-auto rounded border border-border bg-background">
+              {products.length === 0 && <div className="p-2 text-xs text-muted-foreground">Nenhum produto encontrado.</div>}
+              {products.map((p: any) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  onClick={() => { onChange(`/produto/${p.slug}`); setProductQuery(""); }}
+                  className={`flex w-full items-center justify-between gap-2 border-b border-border p-2 text-left text-sm last:border-0 hover:bg-muted ${currentProduct === p.slug ? "bg-primary/10" : ""}`}
+                >
+                  <span className="truncate">{p.name}</span>
+                  <span className="shrink-0 text-[10px] uppercase text-muted-foreground">{p.sku}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {value && (
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Destino: <code className="rounded bg-muted px-1">{value}</code>
+        </p>
+      )}
+    </div>
   );
 }
