@@ -107,7 +107,7 @@ function BannersList() {
               <L label="Subtítulo" full><input value={editing.subtitle ?? ""} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} className={inp} /></L>
               <L label="Imagem desktop (URL) *" full><input required value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} className={inp} /></L>
               <L label="Imagem mobile (URL)" full><input value={editing.image_mobile_url ?? ""} onChange={(e) => setEditing({ ...editing, image_mobile_url: e.target.value })} className={inp} /></L>
-              <L label="Link (URL de destino)"><input value={editing.link_url ?? ""} onChange={(e) => setEditing({ ...editing, link_url: e.target.value })} className={inp} /></L>
+              <div className="md:col-span-2"><LinkBuilder value={editing.link_url ?? ""} onChange={(v) => setEditing({ ...editing, link_url: v })} /></div>
               <L label="Texto do botão (CTA)"><input value={editing.cta_label ?? ""} onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })} className={inp} /></L>
               <L label="Posição">
                 <select value={editing.position} onChange={(e) => setEditing({ ...editing, position: e.target.value })} className={inp}>
