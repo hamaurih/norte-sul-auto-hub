@@ -39,7 +39,7 @@ function ProductsList() {
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, sku, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id", { count: "exact" })
+        .select("id, sku, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id, images:product_images(url, is_primary, sort_order)", { count: "exact" })
         .order("name");
       if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
       if (filterCat) query = query.eq("category_id", filterCat);
@@ -54,6 +54,15 @@ function ProductsList() {
       return { rows: data ?? [], total: count ?? 0 };
     },
   });
+
+  const filteredRows = useMemo(() => {
+    const rows = data?.rows ?? [];
+    if (!filterPhoto) return rows;
+    return rows.filter((p: any) => {
+      const hasPhoto = (p.images ?? []).length > 0;
+      return filterPhoto === "with" ? hasPhoto : !hasPhoto;
+    });
+  }, [data, filterPhoto]);
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
