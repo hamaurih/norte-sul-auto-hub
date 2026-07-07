@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/format";
 import { productDelete, productDuplicate, productToggle } from "@/lib/products.functions";
-import { Plus, Pencil, Copy, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Search, ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/produtos/")({
   head: () => ({ meta: [{ title: "Produtos · Admin" }] }),
