@@ -93,7 +93,7 @@ function IaAesBusiness() {
     setTesting(true);
     let status = "failed";
     try {
-      const res = await fetch(`${MCP_URL}/list-tools`.replace("/mcp/list-tools", "/.mcp/list-tools"), {
+      const res = await fetch("/.mcp/list-tools", {
         method: "GET",
         headers: { Accept: "application/json" },
       });
