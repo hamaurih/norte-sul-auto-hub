@@ -140,10 +140,23 @@ function ProductsList() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => {
+            {rows.map((p: any) => {
               const price = p.sale_price_b2c ? Number(p.sale_price_b2c) : Number(p.price_b2c);
+              const imgs = (p.images ?? []).slice().sort(
+                (a: any, b: any) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order,
+              );
+              const thumb = imgs[0]?.url ?? null;
               return (
                 <tr key={p.id} className="border-t border-border hover:bg-muted/40">
+                  <td className="p-2 text-center">
+                    {thumb ? (
+                      <img src={thumb} alt="" className="mx-auto h-10 w-10 rounded object-cover bg-muted" />
+                    ) : (
+                      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded bg-muted text-muted-foreground" title="Sem foto">
+                        <ImageOff className="h-4 w-4 opacity-50" />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-2 font-mono text-xs">{p.sku}</td>
                   <td className="p-2">{p.name}</td>
                   <td className={`p-2 text-right ${p.stock === 0 ? "text-destructive font-bold" : ""}`}>{p.stock}</td>
@@ -163,7 +176,7 @@ function ProductsList() {
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
+              <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
             )}
           </tbody>
         </table>
