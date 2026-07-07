@@ -115,6 +115,11 @@ function ProductsList() {
             <option value="in">Em estoque</option>
             <option value="out">Sem estoque</option>
           </select>
+          <select value={filterPhoto} onChange={(e) => setFilterPhoto(e.target.value as "" | "with" | "without")} className="flex-1 rounded border border-border bg-background p-2 text-sm" title="Filtrar por foto">
+            <option value="">Foto</option>
+            <option value="with">Com foto</option>
+            <option value="without">Sem foto</option>
+          </select>
         </div>
       </div>
 
