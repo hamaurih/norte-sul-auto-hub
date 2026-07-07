@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/format";
 import { productDelete, productDuplicate, productToggle } from "@/lib/products.functions";
-import { Plus, Pencil, Copy, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Search, ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/produtos/")({
   head: () => ({ meta: [{ title: "Produtos · Admin" }] }),
@@ -23,11 +23,12 @@ function ProductsList() {
   const [filterBrand, setFilterBrand] = useState("");
   const [filterActive, setFilterActive] = useState<"" | "true" | "false">("");
   const [filterStock, setFilterStock] = useState<"" | "in" | "out">("");
+  const [filterPhoto, setFilterPhoto] = useState<"" | "with" | "without">("");
   const [pageSize, setPageSize] = useState(100);
   const [page, setPage] = useState(1);
 
   // reset page when filters change
-  useEffect(() => { setPage(1); }, [q, filterCat, filterBrand, filterActive, filterStock, pageSize]);
+  useEffect(() => { setPage(1); }, [q, filterCat, filterBrand, filterActive, filterStock, filterPhoto, pageSize]);
 
   const { data: brands = [] } = useQuery({ queryKey: ["brands-all"], queryFn: async () => (await supabase.from("brands").select("id,name").order("name")).data ?? [] });
   const { data: cats = [] } = useQuery({ queryKey: ["categories-all"], queryFn: async () => (await supabase.from("categories").select("id,name,parent_id").order("name")).data ?? [] });
@@ -38,7 +39,7 @@ function ProductsList() {
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, sku, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id", { count: "exact" })
+        .select("id, sku, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id, images:product_images(url, is_primary, sort_order)", { count: "exact" })
         .order("name");
       if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
       if (filterCat) query = query.eq("category_id", filterCat);
@@ -54,8 +55,17 @@ function ProductsList() {
     },
   });
 
-  const rows = data?.rows ?? [];
-  const total = data?.total ?? 0;
+  const filteredRows = useMemo(() => {
+    const rows = data?.rows ?? [];
+    if (!filterPhoto) return rows;
+    return rows.filter((p: any) => {
+      const hasPhoto = (p.images ?? []).length > 0;
+      return filterPhoto === "with" ? hasPhoto : !hasPhoto;
+    });
+  }, [data, filterPhoto]);
+
+  const rows = filteredRows;
+  const total = filterPhoto ? rows.length : (data?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   async function handleDelete(id: string, name: string) {
@@ -105,6 +115,11 @@ function ProductsList() {
             <option value="in">Em estoque</option>
             <option value="out">Sem estoque</option>
           </select>
+          <select value={filterPhoto} onChange={(e) => setFilterPhoto(e.target.value as "" | "with" | "without")} className="flex-1 rounded border border-border bg-background p-2 text-sm" title="Filtrar por foto">
+            <option value="">Foto</option>
+            <option value="with">Com foto</option>
+            <option value="without">Sem foto</option>
+          </select>
         </div>
       </div>
 
@@ -112,6 +127,7 @@ function ProductsList() {
         <table className="w-full text-sm">
           <thead className="bg-muted text-xs uppercase">
             <tr>
+              <th className="p-2 text-center">Foto</th>
               <th className="p-2 text-left">SKU</th>
               <th className="p-2 text-left">Nome</th>
               <th className="p-2 text-right">Estoque</th>
@@ -124,10 +140,23 @@ function ProductsList() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => {
+            {rows.map((p: any) => {
               const price = p.sale_price_b2c ? Number(p.sale_price_b2c) : Number(p.price_b2c);
+              const imgs = (p.images ?? []).slice().sort(
+                (a: any, b: any) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order,
+              );
+              const thumb = imgs[0]?.url ?? null;
               return (
                 <tr key={p.id} className="border-t border-border hover:bg-muted/40">
+                  <td className="p-2 text-center">
+                    {thumb ? (
+                      <img src={thumb} alt="" className="mx-auto h-10 w-10 rounded object-cover bg-muted" />
+                    ) : (
+                      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded bg-muted text-muted-foreground" title="Sem foto">
+                        <ImageOff className="h-4 w-4 opacity-50" />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-2 font-mono text-xs">{p.sku}</td>
                   <td className="p-2">{p.name}</td>
                   <td className={`p-2 text-right ${p.stock === 0 ? "text-destructive font-bold" : ""}`}>{p.stock}</td>
@@ -147,7 +176,7 @@ function ProductsList() {
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
+              <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
             )}
           </tbody>
         </table>
