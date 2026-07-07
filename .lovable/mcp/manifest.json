@@ -8,14 +8,14 @@
   "mcp": {
     "server": {
       "name": "aes-store-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "A&S Store MCP"
     },
     "tools": [
       {
         "name": "search_products",
         "title": "Search products",
-        "description": "Search the public product catalog by name or description. Returns active products with prices, stock and slug.",
+        "description": "Search the active product catalog by name, SKU, or internal code. Returns products with prices, stock, brand and slug so the agent can quote and check availability.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -28,13 +28,17 @@
             "query": {
               "type": "string",
               "minLength": 1,
-              "description": "Search text matched against product name/description."
+              "description": "Search text matched against product name, SKU, internal code and description."
             },
             "limit": {
               "description": "Max results (default 10).",
               "type": "integer",
               "minimum": 1,
               "maximum": 50
+            },
+            "in_stock_only": {
+              "description": "If true, only return products with stock greater than zero.",
+              "type": "boolean"
             }
           },
           "required": [
@@ -65,6 +69,121 @@
           "required": [
             "slug"
           ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_stock",
+        "title": "Check stock",
+        "description": "Check current stock and price for one or more products by SKU or slug. Use before quoting or committing to a sale to confirm availability.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "skus": {
+              "description": "List of SKUs to check.",
+              "minItems": 1,
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "slugs": {
+              "description": "List of product slugs to check.",
+              "minItems": 1,
+              "maxItems": 50,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "find_by_vehicle",
+        "title": "Find products by vehicle",
+        "description": "Find products that fit a specific vehicle (make, model and optional year). Use when a customer describes their car, e.g. 'Onix 2020'. Combine with a category or query filter to narrow the result.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "make": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Vehicle make, e.g. 'Chevrolet'."
+            },
+            "model": {
+              "description": "Vehicle model, e.g. 'Onix'.",
+              "type": "string",
+              "minLength": 1
+            },
+            "year": {
+              "description": "Vehicle model year.",
+              "type": "integer",
+              "minimum": 1950,
+              "maximum": 2100
+            },
+            "query": {
+              "description": "Optional text filter applied to product name/SKU (e.g. 'pastilha de freio').",
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "make"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_categories",
+        "title": "List categories",
+        "description": "List all active product categories with their slug. Use to help the customer navigate the catalog or to narrow searches.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_brands",
+        "title": "List brands",
+        "description": "List all product brands with their slug. Use to filter searches or answer 'which brands do you carry'.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
         },
         "outputSchema": null
       }
