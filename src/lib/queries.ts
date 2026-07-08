@@ -159,10 +159,12 @@ export interface CatalogFilters {
 export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]> {
   let q = supabase.from("products").select(PRODUCT_LIST_SELECT).eq("active", true);
 
-  // Brand-aware search: se o texto casar com marca cadastrada, filtra por marca
   let brandIdFromQuery: string | null = null;
+  let categoryIdFromAlias: string | null = null;
   if (f.q) {
     const term = f.q.trim().toLowerCase();
+
+    // 1) Marca por match de nome/slug
     if (term.length >= 2 && !f.brand) {
       const { data: brands } = await supabase
         .from("brands")
@@ -173,11 +175,30 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
       const chosen = exact ?? brands?.[0] ?? null;
       if (chosen) brandIdFromQuery = chosen.id;
     }
-    if (!brandIdFromQuery) {
+
+    // 2) Alias comercial (só se ainda não achou marca)
+    if (!brandIdFromQuery && !f.category) {
+      const alias = await resolveAlias(f.q);
+      if (alias) {
+        if (alias.target_type === "brand" && alias.target_slug) {
+          const { data: br } = await supabase.from("brands").select("id").eq("slug", alias.target_slug).maybeSingle();
+          if (br) brandIdFromQuery = br.id;
+        } else if (alias.target_type === "category" && alias.target_slug) {
+          const { data: cat } = await supabase.from("categories").select("id").eq("slug", alias.target_slug).maybeSingle();
+          if (cat) categoryIdFromAlias = cat.id;
+        } else if (alias.target_type === "product" && alias.target_id) {
+          q = q.eq("id", alias.target_id);
+        }
+      }
+    }
+
+    // 3) Se nada casou por marca/alias, busca textual normal
+    if (!brandIdFromQuery && !categoryIdFromAlias) {
       q = q.or(`name.ilike.%${f.q}%,sku.ilike.%${f.q}%,short_description.ilike.%${f.q}%`);
     }
   }
   if (brandIdFromQuery) q = q.eq("brand_id", brandIdFromQuery);
+  if (categoryIdFromAlias) q = q.eq("category_id", categoryIdFromAlias);
   if (f.category) {
     const { data: cat } = await supabase.from("categories").select("id").eq("slug", f.category).maybeSingle();
     if (cat) q = q.eq("category_id", cat.id);
