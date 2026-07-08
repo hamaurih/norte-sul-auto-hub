@@ -18,6 +18,10 @@ import {
   Settings,
   ShieldAlert,
   Network,
+  Building2,
+  Warehouse,
+  FileText,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,20 +52,24 @@ type Item = {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
-  group: "operacao" | "catalogo" | "marketing" | "integracoes";
+  group: "operacao" | "catalogo" | "estoque" | "marketing" | "integracoes" | "sistema";
   adminOnly?: boolean;
 };
 
 const items: Item[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, group: "operacao" },
+  { to: "/admin/orcamentos", label: "Orçamentos", icon: FileText, group: "operacao" },
+  { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, group: "operacao" },
   { to: "/admin/cadastros-b2b", label: "Cadastros B2B", icon: Briefcase, group: "operacao" },
   { to: "/admin/clientes", label: "Clientes", icon: Users, group: "operacao" },
   { to: "/admin/vendedores", label: "Vendedores", icon: UserCog, group: "operacao", adminOnly: true },
-  { to: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag, group: "operacao" },
 
   { to: "/admin/produtos", label: "Produtos", icon: Package, group: "catalogo" },
   { to: "/admin/categorias", label: "Categorias", icon: FolderTree, group: "catalogo" },
   { to: "/admin/marcas", label: "Marcas", icon: Tag, group: "catalogo" },
+
+  { to: "/admin/filiais", label: "Filiais e Depósitos", icon: Building2, group: "estoque" },
+  { to: "/admin/estoque", label: "Estoque", icon: Warehouse, group: "estoque" },
 
   { to: "/admin/promocoes", label: "Promoções", icon: Percent, group: "marketing" },
   { to: "/admin/cupons", label: "Cupons", icon: Ticket, group: "marketing" },
@@ -70,14 +78,18 @@ const items: Item[] = [
   { to: "/admin/ecossistema", label: "Ecossistema", icon: Network, group: "integracoes", adminOnly: true },
   { to: "/admin/ecossistema/bling", label: "Bling", icon: RefreshCcw, group: "integracoes", adminOnly: true },
   { to: "/admin/ia-aes-business", label: "IA A&S Business", icon: Bot, group: "integracoes", adminOnly: true },
-  { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "integracoes", adminOnly: true },
+
+  { to: "/admin/auditoria", label: "Auditoria", icon: ClipboardCheck, group: "sistema", adminOnly: true },
+  { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "sistema", adminOnly: true },
 ];
 
 const groupLabels: Record<Item["group"], string> = {
-  operacao: "Operação",
+  operacao: "Comercial",
   catalogo: "Catálogo",
+  estoque: "Estoque",
   marketing: "Marketing",
   integracoes: "Integrações",
+  sistema: "Sistema",
 };
 
 function AdminSidebar() {
@@ -89,7 +101,7 @@ function AdminSidebar() {
   if (!isStaff) return null;
 
   const visible = items.filter((i) => !i.adminOnly || isAdmin);
-  const groups = ["operacao", "catalogo", "marketing", "integracoes"] as const;
+  const groups = ["operacao", "catalogo", "estoque", "marketing", "integracoes", "sistema"] as const;
 
   const isActive = (to: string) => (to === "/admin" ? pathname === "/admin" : pathname.startsWith(to));
 
