@@ -368,18 +368,51 @@ export const syncBlingImages = createServerFn({ method: "POST" })
     try {
       const token = await refreshTokenIfNeeded(sb);
 
-      // 1) IDs de produtos que já têm pelo menos uma imagem
+      // Helper: paginar select ignorando o teto default de 1000 do PostgREST.
+      const PAGE = 1000;
+      async function selectAll<T = any>(
+        build: (from: number, to: number) => any,
+      ): Promise<T[]> {
+        const out: T[] = [];
+        for (let from = 0; ; from += PAGE) {
+          const { data, error } = await build(from, from + PAGE - 1);
+          if (error) throw new Error(error.message);
+          const rows = (data ?? []) as T[];
+          out.push(...rows);
+          if (rows.length < PAGE) break;
+          if (from > 200_000) break; // trava dura de segurança
+        }
+        return out;
+      }
+
+      // 1) IDs de produtos que já têm pelo menos uma imagem (paginado)
       let prods: Array<{ id: string; bling_id: string; name: string }> = [];
       if (onlyMissing) {
-        // Buscar produtos com bling_id ordenados; filtrar em memória contra IDs com imagem.
-        const { data: withImg } = await sb.from("product_images").select("product_id");
-        const withImgSet = new Set<string>((withImg ?? []).map((r: any) => r.product_id));
-        const { data: allProds } = await sb
-          .from("products")
-          .select("id,bling_id,name")
-          .not("bling_id", "is", null)
-          .order("created_at", { ascending: true });
-        prods = (allProds ?? []).filter((p: any) => !withImgSet.has(p.id)).slice(0, batchSize);
+        const withImg = await selectAll<{ product_id: string }>((from, to) =>
+          sb.from("product_images").select("product_id").range(from, to),
+        );
+        const withImgSet = new Set<string>(withImg.map((r) => r.product_id));
+
+        // Pagina produtos até coletar batchSize sem imagem
+        for (let from = 0; prods.length < batchSize; from += PAGE) {
+          const { data: page, error } = await sb
+            .from("products")
+            .select("id,bling_id,name")
+            .not("bling_id", "is", null)
+            .order("created_at", { ascending: true })
+            .range(from, from + PAGE - 1);
+          if (error) throw new Error(error.message);
+          const rows = (page ?? []) as Array<{ id: string; bling_id: string; name: string }>;
+          if (rows.length === 0) break;
+          for (const r of rows) {
+            if (!withImgSet.has(r.id)) {
+              prods.push(r);
+              if (prods.length >= batchSize) break;
+            }
+          }
+          if (rows.length < PAGE) break;
+          if (from > 200_000) break;
+        }
       } else {
         const { data: allProds } = await sb
           .from("products")
@@ -399,7 +432,7 @@ export const syncBlingImages = createServerFn({ method: "POST" })
         try {
           const det: any = await blingFetch(token, `/produtos/${prod.bling_id}`);
           const midia = det?.data?.midia?.imagens ?? {};
-          const imgs: any[] = [
+          const imgs: string[] = [
             ...(midia.externas ?? []),
             ...(midia.internas ?? []),
             ...(det?.data?.imagens ?? []),
@@ -442,14 +475,17 @@ export const syncBlingImages = createServerFn({ method: "POST" })
       // Contar restantes (produtos com bling_id e sem imagem) para o UI decidir se continua
       let remaining = 0;
       if (onlyMissing) {
-        const { data: withImg2 } = await sb.from("product_images").select("product_id");
-        const withImgSet2 = new Set<string>((withImg2 ?? []).map((r: any) => r.product_id));
+        const withImg2 = await selectAll<{ product_id: string }>((from, to) =>
+          sb.from("product_images").select("product_id").range(from, to),
+        );
+        const uniqueWithImg = new Set<string>(withImg2.map((r) => r.product_id)).size;
         const { count: totalProds } = await sb
           .from("products")
           .select("id", { count: "exact", head: true })
           .not("bling_id", "is", null);
-        remaining = Math.max(0, (totalProds ?? 0) - withImgSet2.size);
+        remaining = Math.max(0, (totalProds ?? 0) - uniqueWithImg);
       }
+
 
       const msg =
         `Lote: ${processed} produtos verificados · ${withImages} com imagem · ${imagesSaved} imagens salvas` +
