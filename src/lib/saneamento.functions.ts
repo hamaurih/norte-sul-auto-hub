@@ -56,8 +56,6 @@ export const getSaneamentoStats = createServerFn({ method: "GET" })
       semImagem,
       semAplicacao,
       semMultiEstoque: semMulti,
-      pct: (n: number) => (t > 0 ? Math.round(((t - n) / t) * 100) : 0),
-      pronto: (allIds ?? []).filter((r) => withImgSet.has(r.id)).length, // placeholder
     };
   });
 
