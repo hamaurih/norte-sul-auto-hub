@@ -349,22 +349,53 @@ export const syncBlingProducts = createServerFn({ method: "POST" })
 /**
  * Sincroniza imagens: para cada produto com bling_id, busca detalhe e salva URLs em product_images.
  */
+/**
+ * Sincroniza imagens do Bling em lotes.
+ * - Prioriza produtos SEM imagem (usa RPC não; faz duas queries e diferença).
+ * - Rate-limit ~3 req/s (Bling API v3).
+ * - Marca updated_at mesmo quando o produto não tem mídia, para não voltar na fila.
+ * - Retorna { processed, withImages, imagesSaved, remaining } para permitir auto-loop no UI.
+ */
 export const syncBlingImages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((i: { batchSize?: number; onlyMissing?: boolean } | undefined) => i ?? {})
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = context.supabase as any;
+    const batchSize = Math.min(Math.max(data.batchSize ?? 120, 10), 200);
+    const onlyMissing = data.onlyMissing !== false; // default true
+
     try {
       const token = await refreshTokenIfNeeded(sb);
-      const { data: prods } = await sb
-        .from("products")
-        .select("id,bling_id,name")
-        .not("bling_id", "is", null)
-        .order("updated_at", { ascending: true, nullsFirst: true })
-        .limit(40);
-      let total = 0;
+
+      // 1) IDs de produtos que já têm pelo menos uma imagem
+      let prods: Array<{ id: string; bling_id: string; name: string }> = [];
+      if (onlyMissing) {
+        // Buscar produtos com bling_id ordenados; filtrar em memória contra IDs com imagem.
+        const { data: withImg } = await sb.from("product_images").select("product_id");
+        const withImgSet = new Set<string>((withImg ?? []).map((r: any) => r.product_id));
+        const { data: allProds } = await sb
+          .from("products")
+          .select("id,bling_id,name")
+          .not("bling_id", "is", null)
+          .order("created_at", { ascending: true });
+        prods = (allProds ?? []).filter((p: any) => !withImgSet.has(p.id)).slice(0, batchSize);
+      } else {
+        const { data: allProds } = await sb
+          .from("products")
+          .select("id,bling_id,name")
+          .not("bling_id", "is", null)
+          .order("updated_at", { ascending: true, nullsFirst: true })
+          .limit(batchSize);
+        prods = allProds ?? [];
+      }
+
+      let imagesSaved = 0;
+      let withImages = 0;
       let processed = 0;
-      for (const prod of prods ?? []) {
+      let errors = 0;
+
+      for (const prod of prods) {
         try {
           const det: any = await blingFetch(token, `/produtos/${prod.bling_id}`);
           const midia = det?.data?.midia?.imagens ?? {};
@@ -372,22 +403,30 @@ export const syncBlingImages = createServerFn({ method: "POST" })
             ...(midia.externas ?? []),
             ...(midia.internas ?? []),
             ...(det?.data?.imagens ?? []),
-          ];
+          ]
+            .map((img: any) => img?.link ?? img?.url ?? img?.arquivo ?? img)
+            .filter((u: any) => typeof u === "string" && /^https?:\/\//.test(u));
 
           processed++;
-          if (imgs.length === 0) continue;
-          await sb.from("product_images").delete().eq("product_id", prod.id);
-          const rows = imgs.map((img: any, idx: number) => ({
-            product_id: prod.id,
-            url: img.link ?? img.url ?? img,
-            alt: prod.name,
-            sort_order: idx,
-            is_primary: idx === 0,
-          }));
-          await sb.from("product_images").insert(rows);
+
+          if (imgs.length > 0) {
+            await sb.from("product_images").delete().eq("product_id", prod.id);
+            const rows = imgs.map((url: string, idx: number) => ({
+              product_id: prod.id,
+              url,
+              alt: prod.name,
+              sort_order: idx,
+              is_primary: idx === 0,
+            }));
+            await sb.from("product_images").insert(rows);
+            withImages++;
+            imagesSaved += rows.length;
+          }
+
+          // Sempre marcar updated_at para tirar da fila de "sem imagem"
           await sb.from("products").update({ updated_at: new Date().toISOString() }).eq("id", prod.id);
-          total += rows.length;
         } catch (err: any) {
+          errors++;
           await log(sb, {
             entity: "imagem",
             entity_id: prod.id,
@@ -396,15 +435,32 @@ export const syncBlingImages = createServerFn({ method: "POST" })
             message: err?.message?.slice(0, 300),
           });
         }
+        // rate-limit: ~3 req/s
+        await new Promise((r) => setTimeout(r, 350));
       }
-      const msg = `Processados ${processed} produtos · ${total} imagens salvas. Clique novamente para continuar o próximo lote.`;
-      await log(sb, { entity: "imagem", action: "sync_all", status: "sucesso", message: msg });
-      return { ok: true, message: msg };
 
+      // Contar restantes (produtos com bling_id e sem imagem) para o UI decidir se continua
+      let remaining = 0;
+      if (onlyMissing) {
+        const { data: withImg2 } = await sb.from("product_images").select("product_id");
+        const withImgSet2 = new Set<string>((withImg2 ?? []).map((r: any) => r.product_id));
+        const { count: totalProds } = await sb
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .not("bling_id", "is", null);
+        remaining = Math.max(0, (totalProds ?? 0) - withImgSet2.size);
+      }
+
+      const msg =
+        `Lote: ${processed} produtos verificados · ${withImages} com imagem · ${imagesSaved} imagens salvas` +
+        (errors ? ` · ${errors} erros` : "") +
+        (onlyMissing ? ` · restam ${remaining} produtos sem imagem` : "");
+      await log(sb, { entity: "imagem", action: "sync_batch", status: "sucesso", message: msg });
+      return { ok: true, message: msg, processed, withImages, imagesSaved, errors, remaining };
     } catch (e: any) {
       await log(sb, {
         entity: "imagem",
-        action: "sync_all",
+        action: "sync_batch",
         status: "erro",
         message: e?.message?.slice(0, 500),
       });
