@@ -9,7 +9,7 @@ import listBrandsTool from "./tools/list-brands";
 export default defineMcp({
   name: "aes-store-mcp",
   title: "A&S Store MCP",
-  version: "0.2.0",
+  version: "0.3.0",
   instructions: [
     "Ferramentas do e-commerce Norte Sul Acessórios para atendimento via WhatsApp.",
     "Fluxo típico: (1) identifique o que o cliente precisa; se ele descrever um veículo use `find_by_vehicle`; se citar nome/SKU use `search_products`.",

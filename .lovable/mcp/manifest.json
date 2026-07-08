@@ -8,14 +8,14 @@
   "mcp": {
     "server": {
       "name": "aes-store-mcp",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "A&S Store MCP"
     },
     "tools": [
       {
         "name": "search_products",
         "title": "Search products",
-        "description": "Search the active product catalog by name, SKU, or internal code. Returns products with prices, stock, brand and slug so the agent can quote and check availability.",
+        "description": "Search the active product catalog by name, SKU, internal code, description, brand or category. If the query text is itself a brand name (e.g. 'JBL', 'Pioneer', 'Moura', 'Taramps'), returns products of that brand even when the brand name does not appear in the product title. Returns products with prices, stock, brand, image and slug so the agent can quote and check availability.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -28,7 +28,12 @@
             "query": {
               "type": "string",
               "minLength": 1,
-              "description": "Search text matched against product name, SKU, internal code and description."
+              "description": "Search text: product name, SKU, internal code, description or brand (e.g. 'pastilha freio', 'JBL', 'multimídia Pioneer')."
+            },
+            "brand": {
+              "description": "Restrict results to this brand name or slug.",
+              "type": "string",
+              "minLength": 1
             },
             "limit": {
               "description": "Max results (default 10).",
@@ -75,7 +80,7 @@
       {
         "name": "check_stock",
         "title": "Check stock",
-        "description": "Check current stock and price for one or more products by SKU or slug. Use before quoting or committing to a sale to confirm availability.",
+        "description": "Check current stock and price for one or more products by SKU or slug. Returns the effective available quantity considering multi-branch inventory (when configured) plus the legacy per-product stock. Use before quoting or committing to a sale.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
