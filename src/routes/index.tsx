@@ -56,18 +56,17 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  loader: async ({ context }) => {
-    // Prefetch above-the-fold data in parallel on the server so the HTML
-    // ships already populated (no skeleton flash on first paint).
-    await Promise.all(
-      HOME_QUERIES.map((q) =>
-        context.queryClient.ensureQueryData({
-          queryKey: [...q.queryKey],
-          queryFn: q.queryFn,
-          staleTime: 60_000,
-        }),
-      ),
-    );
+  loader: ({ context }) => {
+    // Fire-and-forget prefetch: primes the cache but never blocks the route
+    // from rendering. If a single Supabase query is slow the page still
+    // paints and individual sections resolve independently on the client.
+    for (const q of HOME_QUERIES) {
+      void context.queryClient.prefetchQuery({
+        queryKey: [...q.queryKey],
+        queryFn: q.queryFn,
+        staleTime: 60_000,
+      });
+    }
   },
   component: Home,
 });
@@ -152,32 +151,47 @@ function HomeFallback() {
 
 function Home() {
   const { isB2BApproved } = useSession();
-  const { data: banners = [], isLoading: loadingBanners } = useQuery({
+  const common = { staleTime: 60_000, retry: 1 } as const;
+  const { data: banners = [], isLoading: loadingBanners, isError: errorBanners } = useQuery({
     queryKey: ["banners"],
     queryFn: fetchBanners,
+    ...common,
   });
   const { data: miniBanners = [] } = useQuery({
     queryKey: ["mini-banners"],
     queryFn: fetchMiniBanners,
+    ...common,
   });
-  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+    ...common,
+  });
   const { data: offers = [], isLoading: loadingOffers } = useQuery({
     queryKey: ["offers"],
     queryFn: fetchOffers,
+    ...common,
   });
   const { data: news = [], isLoading: loadingNews } = useQuery({
     queryKey: ["new"],
     queryFn: fetchNewArrivals,
+    ...common,
   });
   const { data: best = [], isLoading: loadingBest } = useQuery({
     queryKey: ["best"],
     queryFn: fetchBestSellers,
+    ...common,
   });
   const { data: featured = [], isLoading: loadingFeatured } = useQuery({
     queryKey: ["featured"],
     queryFn: fetchFeatured,
+    ...common,
   });
-  const { data: brands = [] } = useQuery({ queryKey: ["brands"], queryFn: fetchBrands });
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: fetchBrands,
+    ...common,
+  });
 
   const heroBanners = banners.map((b) => ({
     id: b.id,
@@ -194,7 +208,7 @@ function Home() {
       <div className="pt-4">
         {heroBanners.length > 0 ? (
           <HeroCarousel banners={heroBanners} />
-        ) : loadingBanners ? (
+        ) : loadingBanners && !errorBanners ? (
           <section className="container-x">
             <div className="aspect-[21/9] w-full animate-pulse rounded-lg bg-muted md:aspect-[16/6]" />
           </section>
