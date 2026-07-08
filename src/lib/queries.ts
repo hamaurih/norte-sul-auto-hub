@@ -299,7 +299,21 @@ export async function fetchSearchSuggestions(term: string, limit = 8): Promise<S
   if (brandMatch) {
     query = query.eq("brand_id", brandMatch.id);
   } else {
-    query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    // Tenta alias comercial antes do fallback textual
+    const alias = await resolveAlias(q);
+    if (alias?.target_type === "category" && alias.target_slug) {
+      const { data: cat } = await supabase.from("categories").select("id").eq("slug", alias.target_slug).maybeSingle();
+      if (cat) query = query.eq("category_id", cat.id);
+      else query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    } else if (alias?.target_type === "brand" && alias.target_slug) {
+      const { data: br } = await supabase.from("brands").select("id").eq("slug", alias.target_slug).maybeSingle();
+      if (br) query = query.eq("brand_id", br.id);
+      else query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    } else if (alias?.target_type === "product" && alias.target_id) {
+      query = query.eq("id", alias.target_id);
+    } else {
+      query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    }
   }
   const { data, error } = await query.order("sales_count", { ascending: false }).limit(limit);
   if (error) {
