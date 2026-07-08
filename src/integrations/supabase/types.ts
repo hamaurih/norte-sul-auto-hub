@@ -193,6 +193,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ai_product_embeddings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
         ]
       }
       ai_tool_logs: {
@@ -470,6 +477,51 @@ export type Database = {
         }
         Relationships: []
       }
+      branches: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          code: string
+          created_at: string
+          email: string | null
+          id: string
+          is_main: boolean
+          name: string
+          phone: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          code: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_main?: boolean
+          name: string
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          code?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_main?: boolean
+          name?: string
+          phone?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           bling_id: string | null
@@ -665,6 +717,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "coupons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
         ]
       }
       integration_logs: {
@@ -831,6 +890,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
         ]
       }
       orders: {
@@ -953,6 +1019,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_applications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
         ]
       }
       product_images: {
@@ -986,6 +1059,65 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
+      product_stock: {
+        Row: {
+          id: string
+          min_stock: number
+          on_hand: number
+          product_id: string
+          reserved: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          id?: string
+          min_stock?: number
+          on_hand?: number
+          product_id: string
+          reserved?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          id?: string
+          min_stock?: number
+          on_hand?: number
+          product_id?: string
+          reserved?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_stock_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -1215,6 +1347,165 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "promotions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          discount: number
+          id: string
+          name: string
+          notes: string | null
+          product_id: string | null
+          qty: number
+          quote_id: string
+          sku: string | null
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount?: number
+          id?: string
+          name: string
+          notes?: string | null
+          product_id?: string | null
+          qty: number
+          quote_id: string
+          sku?: string | null
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          discount?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          product_id?: string | null
+          qty?: number
+          quote_id?: string
+          sku?: string | null
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_notes: string | null
+          customer_phone: string | null
+          discount: number
+          id: string
+          internal_notes: string | null
+          number: number
+          origin: Database["public"]["Enums"]["quote_origin"]
+          sales_rep_id: string | null
+          status: Database["public"]["Enums"]["quote_status"]
+          subtotal: number
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
+          discount?: number
+          id?: string
+          internal_notes?: string | null
+          number?: number
+          origin?: Database["public"]["Enums"]["quote_origin"]
+          sales_rep_id?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
+          discount?: number
+          id?: string
+          internal_notes?: string | null
+          number?: number
+          origin?: Database["public"]["Enums"]["quote_origin"]
+          sales_rep_id?: string | null
+          status?: Database["public"]["Enums"]["quote_status"]
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_sales_rep_id_fkey"
+            columns: ["sales_rep_id"]
+            isOneToOne: false
+            referencedRelation: "sales_reps"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sales_orders: {
@@ -1393,6 +1684,161 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          product_id: string
+          qty: number
+          reference: string | null
+          type: Database["public"]["Enums"]["stock_movement_type"]
+          user_id: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          qty: number
+          reference?: string | null
+          type: Database["public"]["Enums"]["stock_movement_type"]
+          user_id?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          qty?: number
+          reference?: string | null
+          type?: Database["public"]["Enums"]["stock_movement_type"]
+          user_id?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfer_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          qty: number
+          transfer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          qty: number
+          transfer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          qty?: number
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          from_warehouse_id: string
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["stock_transfer_status"]
+          to_warehouse_id: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          from_warehouse_id: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["stock_transfer_status"]
+          to_warehouse_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          from_warehouse_id?: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["stock_transfer_status"]
+          to_warehouse_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_from_warehouse_id_fkey"
+            columns: ["from_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_to_warehouse_id_fkey"
+            columns: ["to_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1414,9 +1860,60 @@ export type Database = {
         }
         Relationships: []
       }
+      warehouses: {
+        Row: {
+          active: boolean
+          branch_id: string
+          code: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          branch_id: string
+          code: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          branch_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      v_product_stock_available: {
+        Row: {
+          available_effective: number | null
+          available_multi: number | null
+          legacy_stock: number | null
+          on_hand_multi: number | null
+          product_id: string | null
+          reserved_multi: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
@@ -1454,6 +1951,27 @@ export type Database = {
         | "entregue"
         | "cancelado"
       promotion_type: "product" | "category" | "brand" | "customer_group"
+      quote_origin: "whatsapp" | "ia" | "site" | "vendedor" | "balcao" | "b2b"
+      quote_status:
+        | "rascunho"
+        | "enviado"
+        | "em_negociacao"
+        | "aprovado"
+        | "recusado"
+        | "convertido"
+        | "expirado"
+      stock_movement_type:
+        | "IN"
+        | "OUT"
+        | "ADJUST"
+        | "TRANSFER"
+        | "RESERVE"
+        | "RELEASE"
+      stock_transfer_status:
+        | "rascunho"
+        | "em_transito"
+        | "concluido"
+        | "cancelado"
       sync_entity:
         | "produto"
         | "estoque"
@@ -1625,6 +2143,30 @@ export const Constants = {
         "cancelado",
       ],
       promotion_type: ["product", "category", "brand", "customer_group"],
+      quote_origin: ["whatsapp", "ia", "site", "vendedor", "balcao", "b2b"],
+      quote_status: [
+        "rascunho",
+        "enviado",
+        "em_negociacao",
+        "aprovado",
+        "recusado",
+        "convertido",
+        "expirado",
+      ],
+      stock_movement_type: [
+        "IN",
+        "OUT",
+        "ADJUST",
+        "TRANSFER",
+        "RESERVE",
+        "RELEASE",
+      ],
+      stock_transfer_status: [
+        "rascunho",
+        "em_transito",
+        "concluido",
+        "cancelado",
+      ],
       sync_entity: [
         "produto",
         "estoque",

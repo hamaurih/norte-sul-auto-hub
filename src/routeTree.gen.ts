@@ -33,8 +33,11 @@ import { Route as AuthenticatedVendedorClientesRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminVendedoresRouteImport } from './routes/_authenticated/admin.vendedores'
 import { Route as AuthenticatedAdminPromocoesRouteImport } from './routes/_authenticated/admin.promocoes'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
+import { Route as AuthenticatedAdminOrcamentosRouteImport } from './routes/_authenticated/admin.orcamentos'
 import { Route as AuthenticatedAdminMarcasRouteImport } from './routes/_authenticated/admin.marcas'
 import { Route as AuthenticatedAdminIaAesBusinessRouteImport } from './routes/_authenticated/admin.ia-aes-business'
+import { Route as AuthenticatedAdminFiliaisRouteImport } from './routes/_authenticated/admin.filiais'
+import { Route as AuthenticatedAdminEstoqueRouteImport } from './routes/_authenticated/admin.estoque'
 import { Route as AuthenticatedAdminEcossistemaRouteImport } from './routes/_authenticated/admin.ecossistema'
 import { Route as AuthenticatedAdminCuponsRouteImport } from './routes/_authenticated/admin.cupons'
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
@@ -43,6 +46,7 @@ import { Route as AuthenticatedAdminCategoriasRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminCadastrosB2bRouteImport } from './routes/_authenticated/admin.cadastros-b2b'
 import { Route as AuthenticatedAdminBlingRouteImport } from './routes/_authenticated/admin.bling'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
+import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminProdutosIndexRouteImport } from './routes/_authenticated/admin.produtos.index'
 import { Route as AuthenticatedAdminEcossistemaIndexRouteImport } from './routes/_authenticated/admin.ecossistema.index'
@@ -181,6 +185,12 @@ const AuthenticatedAdminPedidosRoute =
     path: '/pedidos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminOrcamentosRoute =
+  AuthenticatedAdminOrcamentosRouteImport.update({
+    id: '/orcamentos',
+    path: '/orcamentos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminMarcasRoute =
   AuthenticatedAdminMarcasRouteImport.update({
     id: '/marcas',
@@ -191,6 +201,18 @@ const AuthenticatedAdminIaAesBusinessRoute =
   AuthenticatedAdminIaAesBusinessRouteImport.update({
     id: '/ia-aes-business',
     path: '/ia-aes-business',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminFiliaisRoute =
+  AuthenticatedAdminFiliaisRouteImport.update({
+    id: '/filiais',
+    path: '/filiais',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEstoqueRoute =
+  AuthenticatedAdminEstoqueRouteImport.update({
+    id: '/estoque',
+    path: '/estoque',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminEcossistemaRoute =
@@ -238,6 +260,12 @@ const AuthenticatedAdminBannersRoute =
   AuthenticatedAdminBannersRouteImport.update({
     id: '/banners',
     path: '/banners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAuditoriaRoute =
+  AuthenticatedAdminAuditoriaRouteImport.update({
+    id: '/auditoria',
+    path: '/auditoria',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
@@ -311,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -319,8 +348,11 @@ export interface FileRoutesByFullPath {
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
+  '/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
+  '/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
+  '/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
@@ -353,6 +385,7 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -360,8 +393,11 @@ export interface FileRoutesByTo {
   '/admin/clientes': typeof AuthenticatedAdminClientesRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
+  '/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
+  '/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
+  '/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
@@ -398,6 +434,7 @@ export interface FileRoutesById {
   '/_authenticated/vendedor': typeof AuthenticatedVendedorRouteWithChildren
   '/produto/$slug': typeof ProdutoSlugRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/admin/bling': typeof AuthenticatedAdminBlingRoute
   '/_authenticated/admin/cadastros-b2b': typeof AuthenticatedAdminCadastrosB2bRoute
@@ -406,8 +443,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/_authenticated/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
+  '/_authenticated/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
+  '/_authenticated/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
   '/_authenticated/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
+  '/_authenticated/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
@@ -444,6 +484,7 @@ export interface FileRouteTypes {
     | '/vendedor'
     | '/produto/$slug'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/auditoria'
     | '/admin/banners'
     | '/admin/bling'
     | '/admin/cadastros-b2b'
@@ -452,8 +493,11 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/cupons'
     | '/admin/ecossistema'
+    | '/admin/estoque'
+    | '/admin/filiais'
     | '/admin/ia-aes-business'
     | '/admin/marcas'
+    | '/admin/orcamentos'
     | '/admin/pedidos'
     | '/admin/promocoes'
     | '/admin/vendedores'
@@ -486,6 +530,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/produto/$slug'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/auditoria'
     | '/admin/banners'
     | '/admin/bling'
     | '/admin/cadastros-b2b'
@@ -493,8 +538,11 @@ export interface FileRouteTypes {
     | '/admin/clientes'
     | '/admin/configuracoes'
     | '/admin/cupons'
+    | '/admin/estoque'
+    | '/admin/filiais'
     | '/admin/ia-aes-business'
     | '/admin/marcas'
+    | '/admin/orcamentos'
     | '/admin/pedidos'
     | '/admin/promocoes'
     | '/admin/vendedores'
@@ -530,6 +578,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendedor'
     | '/produto/$slug'
     | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/banners'
     | '/_authenticated/admin/bling'
     | '/_authenticated/admin/cadastros-b2b'
@@ -538,8 +587,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/configuracoes'
     | '/_authenticated/admin/cupons'
     | '/_authenticated/admin/ecossistema'
+    | '/_authenticated/admin/estoque'
+    | '/_authenticated/admin/filiais'
     | '/_authenticated/admin/ia-aes-business'
     | '/_authenticated/admin/marcas'
+    | '/_authenticated/admin/orcamentos'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/promocoes'
     | '/_authenticated/admin/vendedores'
@@ -745,6 +797,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/orcamentos': {
+      id: '/_authenticated/admin/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/admin/orcamentos'
+      preLoaderRoute: typeof AuthenticatedAdminOrcamentosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/marcas': {
       id: '/_authenticated/admin/marcas'
       path: '/marcas'
@@ -757,6 +816,20 @@ declare module '@tanstack/react-router' {
       path: '/ia-aes-business'
       fullPath: '/admin/ia-aes-business'
       preLoaderRoute: typeof AuthenticatedAdminIaAesBusinessRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/filiais': {
+      id: '/_authenticated/admin/filiais'
+      path: '/filiais'
+      fullPath: '/admin/filiais'
+      preLoaderRoute: typeof AuthenticatedAdminFiliaisRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/estoque': {
+      id: '/_authenticated/admin/estoque'
+      path: '/estoque'
+      fullPath: '/admin/estoque'
+      preLoaderRoute: typeof AuthenticatedAdminEstoqueRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/ecossistema': {
@@ -813,6 +886,13 @@ declare module '@tanstack/react-router' {
       path: '/banners'
       fullPath: '/admin/banners'
       preLoaderRoute: typeof AuthenticatedAdminBannersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/auditoria': {
+      id: '/_authenticated/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/.mcp/invoke-tool/$tool': {
@@ -918,6 +998,7 @@ const AuthenticatedAdminVendedoresRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminBannersRoute: typeof AuthenticatedAdminBannersRoute
   AuthenticatedAdminBlingRoute: typeof AuthenticatedAdminBlingRoute
   AuthenticatedAdminCadastrosB2bRoute: typeof AuthenticatedAdminCadastrosB2bRoute
@@ -926,8 +1007,11 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminCuponsRoute: typeof AuthenticatedAdminCuponsRoute
   AuthenticatedAdminEcossistemaRoute: typeof AuthenticatedAdminEcossistemaRouteWithChildren
+  AuthenticatedAdminEstoqueRoute: typeof AuthenticatedAdminEstoqueRoute
+  AuthenticatedAdminFiliaisRoute: typeof AuthenticatedAdminFiliaisRoute
   AuthenticatedAdminIaAesBusinessRoute: typeof AuthenticatedAdminIaAesBusinessRoute
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
+  AuthenticatedAdminOrcamentosRoute: typeof AuthenticatedAdminOrcamentosRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminPromocoesRoute: typeof AuthenticatedAdminPromocoesRoute
   AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
@@ -938,6 +1022,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminBannersRoute: AuthenticatedAdminBannersRoute,
   AuthenticatedAdminBlingRoute: AuthenticatedAdminBlingRoute,
   AuthenticatedAdminCadastrosB2bRoute: AuthenticatedAdminCadastrosB2bRoute,
@@ -947,8 +1032,11 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCuponsRoute: AuthenticatedAdminCuponsRoute,
   AuthenticatedAdminEcossistemaRoute:
     AuthenticatedAdminEcossistemaRouteWithChildren,
+  AuthenticatedAdminEstoqueRoute: AuthenticatedAdminEstoqueRoute,
+  AuthenticatedAdminFiliaisRoute: AuthenticatedAdminFiliaisRoute,
   AuthenticatedAdminIaAesBusinessRoute: AuthenticatedAdminIaAesBusinessRoute,
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
+  AuthenticatedAdminOrcamentosRoute: AuthenticatedAdminOrcamentosRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminPromocoesRoute: AuthenticatedAdminPromocoesRoute,
   AuthenticatedAdminVendedoresRoute:

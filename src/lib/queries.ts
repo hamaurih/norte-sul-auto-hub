@@ -130,9 +130,25 @@ export interface CatalogFilters {
 export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]> {
   let q = supabase.from("products").select(PRODUCT_LIST_SELECT).eq("active", true);
 
+  // Brand-aware search: se o texto casar com marca cadastrada, filtra por marca
+  let brandIdFromQuery: string | null = null;
   if (f.q) {
-    q = q.or(`name.ilike.%${f.q}%,sku.ilike.%${f.q}%,short_description.ilike.%${f.q}%`);
+    const term = f.q.trim().toLowerCase();
+    if (term.length >= 2 && !f.brand) {
+      const { data: brands } = await supabase
+        .from("brands")
+        .select("id, name, slug")
+        .or(`name.ilike.%${term}%,slug.ilike.%${term}%`)
+        .limit(3);
+      const exact = (brands ?? []).find((b) => b.name.toLowerCase() === term || b.slug.toLowerCase() === term);
+      const chosen = exact ?? brands?.[0] ?? null;
+      if (chosen) brandIdFromQuery = chosen.id;
+    }
+    if (!brandIdFromQuery) {
+      q = q.or(`name.ilike.%${f.q}%,sku.ilike.%${f.q}%,short_description.ilike.%${f.q}%`);
+    }
   }
+  if (brandIdFromQuery) q = q.eq("brand_id", brandIdFromQuery);
   if (f.category) {
     const { data: cat } = await supabase.from("categories").select("id").eq("slug", f.category).maybeSingle();
     if (cat) q = q.eq("category_id", cat.id);
@@ -211,15 +227,29 @@ export interface SearchSuggestion {
 export async function fetchSearchSuggestions(term: string, limit = 8): Promise<SearchSuggestion[]> {
   const q = term.trim();
   if (q.length < 2) return [];
-  // Escape PostgREST reserved chars in the .or() filter to avoid syntax errors
   const safe = q.replace(/[,()]/g, " ");
-  const { data, error } = await supabase
+  const lower = q.toLowerCase();
+
+  // Se casar com marca, retornar top produtos da marca
+  const { data: brands } = await supabase
+    .from("brands")
+    .select("id, name, slug")
+    .or(`name.ilike.%${lower}%,slug.ilike.%${lower}%`)
+    .limit(3);
+  const brandMatch = (brands ?? []).find(
+    (b) => b.name.toLowerCase() === lower || b.slug.toLowerCase() === lower,
+  ) ?? brands?.[0] ?? null;
+
+  let query = supabase
     .from("products")
     .select("id, sku, name, slug, price_b2c, images:product_images(url, is_primary, sort_order)")
-    .eq("active", true)
-    .or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`)
-    .order("sales_count", { ascending: false })
-    .limit(limit);
+    .eq("active", true);
+  if (brandMatch) {
+    query = query.eq("brand_id", brandMatch.id);
+  } else {
+    query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+  }
+  const { data, error } = await query.order("sales_count", { ascending: false }).limit(limit);
   if (error) {
     console.error("Erro na busca rápida", error);
     return [];
