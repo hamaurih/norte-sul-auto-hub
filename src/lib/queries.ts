@@ -258,9 +258,6 @@ export async function fetchSearchSuggestions(term: string, limit = 8): Promise<S
     id: string; sku: string; name: string; slug: string; price_b2c: number;
     images: { url: string; is_primary: boolean; sort_order: number }[] | null;
   }) => {
-    id: string; sku: string; name: string; slug: string; price_b2c: number;
-    images: { url: string; is_primary: boolean; sort_order: number }[] | null;
-  }) => {
     const imgs = (p.images ?? []).slice().sort(
       (a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order,
     );
