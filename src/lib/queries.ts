@@ -230,7 +230,9 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
     console.error("Erro ao carregar catálogo", error);
     return [];
   }
-  return (data as unknown as ProductRow[]) ?? [];
+  const rows = (data as unknown as ProductRow[]) ?? [];
+  if (f.q && rows.length === 0) void logNoResult(f.q, "site");
+  return rows;
 }
 
 export async function fetchProductBySlug(slug: string): Promise<ProductRow | null> {
