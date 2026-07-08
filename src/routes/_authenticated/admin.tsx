@@ -79,6 +79,7 @@ const items: Item[] = [
   { to: "/admin/ecossistema/bling", label: "Bling", icon: RefreshCcw, group: "integracoes", adminOnly: true },
   { to: "/admin/ia-aes-business", label: "IA A&S Business", icon: Bot, group: "integracoes", adminOnly: true },
 
+  { to: "/admin/saneamento", label: "Saneamento", icon: ShieldAlert, group: "sistema", adminOnly: true },
   { to: "/admin/auditoria", label: "Auditoria", icon: ClipboardCheck, group: "sistema", adminOnly: true },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "sistema", adminOnly: true },
 ];
