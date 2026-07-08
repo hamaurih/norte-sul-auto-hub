@@ -1684,6 +1684,84 @@ export type Database = {
         }
         Relationships: []
       }
+      search_aliases: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          normalized_term: string
+          target_id: string | null
+          target_label: string | null
+          target_slug: string | null
+          target_type: string
+          term: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          normalized_term: string
+          target_id?: string | null
+          target_label?: string | null
+          target_slug?: string | null
+          target_type: string
+          term: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          normalized_term?: string
+          target_id?: string | null
+          target_label?: string | null
+          target_slug?: string | null
+          target_type?: string
+          term?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      search_no_result_logs: {
+        Row: {
+          created_at: string
+          id: string
+          matched_alias: string | null
+          matched_brand: string | null
+          matched_category: string | null
+          normalized_term: string
+          origin: string
+          results_count: number
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_alias?: string | null
+          matched_brand?: string | null
+          matched_category?: string | null
+          normalized_term: string
+          origin?: string
+          results_count?: number
+          term: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_alias?: string | null
+          matched_brand?: string | null
+          matched_category?: string | null
+          normalized_term?: string
+          origin?: string
+          results_count?: number
+          term?: string
+        }
+        Relationships: []
+      }
       stock_movements: {
         Row: {
           created_at: string

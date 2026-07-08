@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { normalizeTerm } from "../../normalize";
 
 export default defineTool({
   name: "search_products",
@@ -42,6 +43,33 @@ export default defineTool({
       matchedBrand = exact ?? brands?.[0] ?? null;
     }
 
+    // Alias lookup (só se não achou marca via texto/param explícito)
+    let matchedAlias: { term: string; target_type: string; target_slug: string | null; target_label: string | null } | null = null;
+    let matchedCategory: { name: string; slug: string } | null = null;
+    if (!matchedBrand) {
+      const norm = normalizeTerm(query);
+      if (norm.length >= 2) {
+        const { data: aliasRows } = await supabase
+          .from("search_aliases")
+          .select("term, target_type, target_slug, target_id, target_label, weight")
+          .eq("is_active", true)
+          .eq("normalized_term", norm)
+          .order("weight", { ascending: false })
+          .limit(1);
+        const alias = aliasRows?.[0];
+        if (alias) {
+          matchedAlias = { term: alias.term, target_type: alias.target_type, target_slug: alias.target_slug, target_label: alias.target_label };
+          if (alias.target_type === "brand" && alias.target_slug) {
+            const { data: br } = await supabase.from("brands").select("id, name, slug").eq("slug", alias.target_slug).maybeSingle();
+            if (br) matchedBrand = br;
+          } else if (alias.target_type === "category" && alias.target_slug) {
+            const { data: cat } = await supabase.from("categories").select("id, name, slug").eq("slug", alias.target_slug).maybeSingle();
+            if (cat) matchedCategory = { name: cat.name, slug: cat.slug };
+          }
+        }
+      }
+    }
+
     let q = supabase
       .from("products")
       .select(
@@ -52,11 +80,14 @@ export default defineTool({
       .limit(limit ?? 10);
 
     if (matchedBrand) {
-      // Brand-focused query: all products of the brand (optionally still filtered by free text)
       q = q.eq("brand_id", matchedBrand.id);
       if (!brand && safe && safe.toLowerCase() !== matchedBrand.name.toLowerCase()) {
         q = q.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%,short_description.ilike.%${safe}%`);
       }
+    } else if (matchedCategory) {
+      const { data: cat } = await supabase.from("categories").select("id").eq("slug", matchedCategory.slug).maybeSingle();
+      if (cat) q = q.eq("category_id", cat.id);
+      else q = q.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%,short_description.ilike.%${safe}%`);
     } else {
       q = q.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%,short_description.ilike.%${safe}%`);
     }
@@ -82,16 +113,35 @@ export default defineTool({
       };
     });
 
+    // Registro best-effort de buscas sem resultado
+    if (results.length === 0) {
+      await supabase.from("search_no_result_logs").insert({
+        term: query.slice(0, 200),
+        normalized_term: normalizeTerm(query).slice(0, 200),
+        origin: "mcp",
+        results_count: 0,
+        matched_alias: matchedAlias?.term ?? null,
+        matched_brand: matchedBrand?.name ?? null,
+        matched_category: matchedCategory?.name ?? null,
+      });
+    }
+
+    let explanation = "";
+    if (matchedBrand && matchedAlias) explanation = `Termo "${query}" foi entendido como marca ${matchedBrand.name} via alias.`;
+    else if (matchedBrand) explanation = `Encontrei produtos da marca ${matchedBrand.name}.`;
+    else if (matchedCategory) explanation = `Encontrei produtos da categoria ${matchedCategory.name} (termo pesquisado: "${query}").`;
+    else if (results.length > 0) explanation = `Resultados por busca textual em "${query}".`;
+
     return {
       content: [
         {
           type: "text",
           text: results.length
-            ? JSON.stringify({ matchedBrand, count: results.length, results })
+            ? `${explanation}\n${JSON.stringify({ matchedBrand, matchedAlias, matchedCategory, count: results.length, results })}`
             : `Nenhum produto ativo encontrado para "${query}".`,
         },
       ],
-      structuredContent: { matchedBrand, count: results.length, results },
+      structuredContent: { matchedBrand, matchedAlias, matchedCategory, count: results.length, results },
     };
   },
 });

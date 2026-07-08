@@ -1,4 +1,33 @@
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeTerm } from "./normalize";
+
+// Resolve termo → alias (categoria/marca/produto). Retorna o alias de maior peso ativo.
+export async function resolveAlias(term: string) {
+  const n = normalizeTerm(term);
+  if (n.length < 2) return null;
+  const { data } = await supabase
+    .from("search_aliases")
+    .select("term, normalized_term, target_type, target_id, target_slug, target_label, weight")
+    .eq("is_active", true)
+    .eq("normalized_term", n)
+    .order("weight", { ascending: false })
+    .limit(1);
+  return data?.[0] ?? null;
+}
+
+async function logNoResult(term: string, origin: "site" | "mcp" | "ia" | "admin", matched?: { alias?: string | null; brand?: string | null; category?: string | null }) {
+  try {
+    await supabase.from("search_no_result_logs").insert({
+      term: term.slice(0, 200),
+      normalized_term: normalizeTerm(term).slice(0, 200),
+      origin,
+      results_count: 0,
+      matched_alias: matched?.alias ?? null,
+      matched_brand: matched?.brand ?? null,
+      matched_category: matched?.category ?? null,
+    });
+  } catch { /* best effort */ }
+}
 
 export interface ProductRow {
   id: string;
@@ -130,10 +159,12 @@ export interface CatalogFilters {
 export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]> {
   let q = supabase.from("products").select(PRODUCT_LIST_SELECT).eq("active", true);
 
-  // Brand-aware search: se o texto casar com marca cadastrada, filtra por marca
   let brandIdFromQuery: string | null = null;
+  let categoryIdFromAlias: string | null = null;
   if (f.q) {
     const term = f.q.trim().toLowerCase();
+
+    // 1) Marca por match de nome/slug
     if (term.length >= 2 && !f.brand) {
       const { data: brands } = await supabase
         .from("brands")
@@ -144,11 +175,30 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
       const chosen = exact ?? brands?.[0] ?? null;
       if (chosen) brandIdFromQuery = chosen.id;
     }
-    if (!brandIdFromQuery) {
+
+    // 2) Alias comercial (só se ainda não achou marca)
+    if (!brandIdFromQuery && !f.category) {
+      const alias = await resolveAlias(f.q);
+      if (alias) {
+        if (alias.target_type === "brand" && alias.target_slug) {
+          const { data: br } = await supabase.from("brands").select("id").eq("slug", alias.target_slug).maybeSingle();
+          if (br) brandIdFromQuery = br.id;
+        } else if (alias.target_type === "category" && alias.target_slug) {
+          const { data: cat } = await supabase.from("categories").select("id").eq("slug", alias.target_slug).maybeSingle();
+          if (cat) categoryIdFromAlias = cat.id;
+        } else if (alias.target_type === "product" && alias.target_id) {
+          q = q.eq("id", alias.target_id);
+        }
+      }
+    }
+
+    // 3) Se nada casou por marca/alias, busca textual normal
+    if (!brandIdFromQuery && !categoryIdFromAlias) {
       q = q.or(`name.ilike.%${f.q}%,sku.ilike.%${f.q}%,short_description.ilike.%${f.q}%`);
     }
   }
   if (brandIdFromQuery) q = q.eq("brand_id", brandIdFromQuery);
+  if (categoryIdFromAlias) q = q.eq("category_id", categoryIdFromAlias);
   if (f.category) {
     const { data: cat } = await supabase.from("categories").select("id").eq("slug", f.category).maybeSingle();
     if (cat) q = q.eq("category_id", cat.id);
@@ -180,7 +230,9 @@ export async function fetchCatalog(f: CatalogFilters = {}): Promise<ProductRow[]
     console.error("Erro ao carregar catálogo", error);
     return [];
   }
-  return (data as unknown as ProductRow[]) ?? [];
+  const rows = (data as unknown as ProductRow[]) ?? [];
+  if (f.q && rows.length === 0) void logNoResult(f.q, "site");
+  return rows;
 }
 
 export async function fetchProductBySlug(slug: string): Promise<ProductRow | null> {
@@ -247,7 +299,21 @@ export async function fetchSearchSuggestions(term: string, limit = 8): Promise<S
   if (brandMatch) {
     query = query.eq("brand_id", brandMatch.id);
   } else {
-    query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    // Tenta alias comercial antes do fallback textual
+    const alias = await resolveAlias(q);
+    if (alias?.target_type === "category" && alias.target_slug) {
+      const { data: cat } = await supabase.from("categories").select("id").eq("slug", alias.target_slug).maybeSingle();
+      if (cat) query = query.eq("category_id", cat.id);
+      else query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    } else if (alias?.target_type === "brand" && alias.target_slug) {
+      const { data: br } = await supabase.from("brands").select("id").eq("slug", alias.target_slug).maybeSingle();
+      if (br) query = query.eq("brand_id", br.id);
+      else query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    } else if (alias?.target_type === "product" && alias.target_id) {
+      query = query.eq("id", alias.target_id);
+    } else {
+      query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`);
+    }
   }
   const { data, error } = await query.order("sales_count", { ascending: false }).limit(limit);
   if (error) {
