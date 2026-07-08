@@ -698,3 +698,67 @@ function ErrorList({ logs, onReprocess }: { logs: BlingLog[]; onReprocess: (id: 
     </ul>
   );
 }
+
+type ImageProgress = {
+  iter: number;
+  processed: number;
+  withImages: number;
+  imagesSaved: number;
+  remaining: number;
+};
+
+function ImageAutoSyncPanel({
+  disabled,
+  onStart,
+}: {
+  disabled: boolean;
+  onStart: (setProgress: (p: ImageProgress) => void) => Promise<void>;
+}) {
+  const [progress, setProgress] = useState<ImageProgress | null>(null);
+  const [running, setRunning] = useState(false);
+  return (
+    <div className="rounded border border-primary/30 bg-primary/5 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold">Sincronizar TODAS as imagens (auto-loop)</p>
+          <p className="text-xs text-muted-foreground">
+            Roda vários lotes em sequência até processar todos os produtos sem imagem. Pode levar vários minutos —
+            deixe esta aba aberta.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          disabled={disabled || running}
+          onClick={async () => {
+            setRunning(true);
+            setProgress(null);
+            await onStart((p) => setProgress(p));
+            setRunning(false);
+          }}
+        >
+          <RefreshCcw className={`mr-1 h-4 w-4 ${running ? "animate-spin" : ""}`} />
+          {running ? "Rodando…" : "Buscar todas as imagens"}
+        </Button>
+      </div>
+      {progress && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
+          <Stat label="Lote #" value={progress.iter} />
+          <Stat label="Verificados" value={progress.processed} />
+          <Stat label="Com imagem" value={progress.withImages} />
+          <Stat label="Imagens salvas" value={progress.imagesSaved} />
+          <Stat label="Faltam" value={progress.remaining} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded border border-border bg-background p-2 text-center">
+      <p className="text-base font-bold">{value}</p>
+      <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
