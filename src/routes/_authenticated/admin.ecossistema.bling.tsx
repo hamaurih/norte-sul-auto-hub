@@ -313,12 +313,42 @@ function BlingModule() {
         <TabsContent value="imagens" className="mt-4">
           <SyncCard
             title="Imagens"
-            description="Baixa imagens vinculadas aos produtos no Bling."
+            description="Baixa imagens vinculadas aos produtos no Bling. Processa em lotes de ~120 produtos (rate-limit 3 req/s do Bling)."
             lastSync={null}
-            actionLabel="Sincronizar imagens"
-            onSync={runSync(syncImages, "Imagens")}
-            pending={busy === "Imagens"}
+            actionLabel="Sincronizar 1 lote"
+            onSync={runSync(() => syncImages({ data: { batchSize: 120, onlyMissing: true } }), "Imagens")}
+            pending={busy === "Imagens" || busy === "Imagens (auto)"}
           >
+            <ImageAutoSyncPanel
+              disabled={!!busy}
+              onStart={async (setProgress) => {
+                if (busy) return;
+                setBusy("Imagens (auto)");
+                try {
+                  let iter = 0;
+                  while (iter < 100) {
+                    iter++;
+                    const r: any = await syncImages({ data: { batchSize: 150, onlyMissing: true } });
+                    setProgress({
+                      iter,
+                      processed: r.processed,
+                      withImages: r.withImages,
+                      imagesSaved: r.imagesSaved,
+                      remaining: r.remaining,
+                    });
+                    if (!r.processed || r.remaining === 0) break;
+                    // pequena pausa entre lotes
+                    await new Promise((res) => setTimeout(res, 800));
+                  }
+                  toast.success("Sincronização de imagens concluída (ou pausada em 100 lotes)");
+                } catch (e: any) {
+                  toast.error(`Auto-sync falhou: ${e?.message ?? "Erro"}`);
+                } finally {
+                  setBusy(null);
+                  invalidateAll();
+                }
+              }}
+            />
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Imagem do Bling sobrescreve imagem manual</p>
@@ -335,6 +365,8 @@ function BlingModule() {
             />
           </SyncCard>
         </TabsContent>
+
+
 
         {/* ============ ESTOQUE ============ */}
         <TabsContent value="estoque" className="mt-4">
