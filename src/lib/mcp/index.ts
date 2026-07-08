@@ -12,6 +12,11 @@ export default defineMcp({
   name: "aes-store-mcp",
   title: "A&S Store MCP",
   version: "0.3.0",
+  auth: auth.oauth.issuer({
+    issuer: `${SUPABASE_URL}/auth/v1`,
+    jwksUri: `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+    acceptedAudiences: ["authenticated"],
+  }),
   instructions: [
     "Ferramentas do e-commerce Norte Sul Acessórios para atendimento via WhatsApp.",
     "Fluxo típico: (1) identifique o que o cliente precisa; se ele descrever um veículo use `find_by_vehicle`; se citar nome/SKU use `search_products`.",
