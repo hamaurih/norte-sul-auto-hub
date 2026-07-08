@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import { normalizeTerm } from "../../normalize";
 
 export default defineTool({
   name: "search_products",
