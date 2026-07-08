@@ -1,4 +1,6 @@
-import { defineMcp } from "@lovable.dev/mcp-js";
+import { defineMcp, auth } from "@lovable.dev/mcp-js";
+
+const SUPABASE_URL = "https://cpwabehobsucqthixjgk.supabase.co";
 import searchProductsTool from "./tools/search-products";
 import getProductTool from "./tools/get-product";
 import checkStockTool from "./tools/check-stock";
