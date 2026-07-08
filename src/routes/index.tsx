@@ -208,7 +208,7 @@ function Home() {
       <div className="pt-4">
         {heroBanners.length > 0 ? (
           <HeroCarousel banners={heroBanners} />
-        ) : loadingBanners ? (
+        ) : loadingBanners && !errorBanners ? (
           <section className="container-x">
             <div className="aspect-[21/9] w-full animate-pulse rounded-lg bg-muted md:aspect-[16/6]" />
           </section>
