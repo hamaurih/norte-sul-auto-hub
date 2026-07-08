@@ -1,4 +1,33 @@
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeTerm } from "./normalize";
+
+// Resolve termo → alias (categoria/marca/produto). Retorna o alias de maior peso ativo.
+export async function resolveAlias(term: string) {
+  const n = normalizeTerm(term);
+  if (n.length < 2) return null;
+  const { data } = await supabase
+    .from("search_aliases")
+    .select("term, normalized_term, target_type, target_id, target_slug, target_label, weight")
+    .eq("is_active", true)
+    .eq("normalized_term", n)
+    .order("weight", { ascending: false })
+    .limit(1);
+  return data?.[0] ?? null;
+}
+
+async function logNoResult(term: string, origin: "site" | "mcp" | "ia" | "admin", matched?: { alias?: string | null; brand?: string | null; category?: string | null }) {
+  try {
+    await supabase.from("search_no_result_logs").insert({
+      term: term.slice(0, 200),
+      normalized_term: normalizeTerm(term).slice(0, 200),
+      origin,
+      results_count: 0,
+      matched_alias: matched?.alias ?? null,
+      matched_brand: matched?.brand ?? null,
+      matched_category: matched?.category ?? null,
+    });
+  } catch { /* best effort */ }
+}
 
 export interface ProductRow {
   id: string;
