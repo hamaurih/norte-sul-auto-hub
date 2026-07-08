@@ -151,32 +151,47 @@ function HomeFallback() {
 
 function Home() {
   const { isB2BApproved } = useSession();
-  const { data: banners = [], isLoading: loadingBanners } = useQuery({
+  const common = { staleTime: 60_000, retry: 1 } as const;
+  const { data: banners = [], isLoading: loadingBanners, isError: errorBanners } = useQuery({
     queryKey: ["banners"],
     queryFn: fetchBanners,
+    ...common,
   });
   const { data: miniBanners = [] } = useQuery({
     queryKey: ["mini-banners"],
     queryFn: fetchMiniBanners,
+    ...common,
   });
-  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+    ...common,
+  });
   const { data: offers = [], isLoading: loadingOffers } = useQuery({
     queryKey: ["offers"],
     queryFn: fetchOffers,
+    ...common,
   });
   const { data: news = [], isLoading: loadingNews } = useQuery({
     queryKey: ["new"],
     queryFn: fetchNewArrivals,
+    ...common,
   });
   const { data: best = [], isLoading: loadingBest } = useQuery({
     queryKey: ["best"],
     queryFn: fetchBestSellers,
+    ...common,
   });
   const { data: featured = [], isLoading: loadingFeatured } = useQuery({
     queryKey: ["featured"],
     queryFn: fetchFeatured,
+    ...common,
   });
-  const { data: brands = [] } = useQuery({ queryKey: ["brands"], queryFn: fetchBrands });
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: fetchBrands,
+    ...common,
+  });
 
   const heroBanners = banners.map((b) => ({
     id: b.id,
