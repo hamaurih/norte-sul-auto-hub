@@ -313,12 +313,42 @@ function BlingModule() {
         <TabsContent value="imagens" className="mt-4">
           <SyncCard
             title="Imagens"
-            description="Baixa imagens vinculadas aos produtos no Bling."
+            description="Baixa imagens vinculadas aos produtos no Bling. Processa em lotes de ~120 produtos (rate-limit 3 req/s do Bling)."
             lastSync={null}
-            actionLabel="Sincronizar imagens"
-            onSync={runSync(syncImages, "Imagens")}
-            pending={busy === "Imagens"}
+            actionLabel="Sincronizar 1 lote"
+            onSync={runSync(() => syncImages({ data: { batchSize: 120, onlyMissing: true } }), "Imagens")}
+            pending={busy === "Imagens" || busy === "Imagens (auto)"}
           >
+            <ImageAutoSyncPanel
+              disabled={!!busy}
+              onStart={async (setProgress) => {
+                if (busy) return;
+                setBusy("Imagens (auto)");
+                try {
+                  let iter = 0;
+                  while (iter < 100) {
+                    iter++;
+                    const r: any = await syncImages({ data: { batchSize: 150, onlyMissing: true } });
+                    setProgress({
+                      iter,
+                      processed: r.processed,
+                      withImages: r.withImages,
+                      imagesSaved: r.imagesSaved,
+                      remaining: r.remaining,
+                    });
+                    if (!r.processed || r.remaining === 0) break;
+                    // pequena pausa entre lotes
+                    await new Promise((res) => setTimeout(res, 800));
+                  }
+                  toast.success("Sincronização de imagens concluída (ou pausada em 100 lotes)");
+                } catch (e: any) {
+                  toast.error(`Auto-sync falhou: ${e?.message ?? "Erro"}`);
+                } finally {
+                  setBusy(null);
+                  invalidateAll();
+                }
+              }}
+            />
             <div className="flex items-center justify-between rounded border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Imagem do Bling sobrescreve imagem manual</p>
@@ -335,6 +365,8 @@ function BlingModule() {
             />
           </SyncCard>
         </TabsContent>
+
+
 
         {/* ============ ESTOQUE ============ */}
         <TabsContent value="estoque" className="mt-4">
@@ -666,3 +698,67 @@ function ErrorList({ logs, onReprocess }: { logs: BlingLog[]; onReprocess: (id: 
     </ul>
   );
 }
+
+type ImageProgress = {
+  iter: number;
+  processed: number;
+  withImages: number;
+  imagesSaved: number;
+  remaining: number;
+};
+
+function ImageAutoSyncPanel({
+  disabled,
+  onStart,
+}: {
+  disabled: boolean;
+  onStart: (setProgress: (p: ImageProgress) => void) => Promise<void>;
+}) {
+  const [progress, setProgress] = useState<ImageProgress | null>(null);
+  const [running, setRunning] = useState(false);
+  return (
+    <div className="rounded border border-primary/30 bg-primary/5 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold">Sincronizar TODAS as imagens (auto-loop)</p>
+          <p className="text-xs text-muted-foreground">
+            Roda vários lotes em sequência até processar todos os produtos sem imagem. Pode levar vários minutos —
+            deixe esta aba aberta.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          disabled={disabled || running}
+          onClick={async () => {
+            setRunning(true);
+            setProgress(null);
+            await onStart((p) => setProgress(p));
+            setRunning(false);
+          }}
+        >
+          <RefreshCcw className={`mr-1 h-4 w-4 ${running ? "animate-spin" : ""}`} />
+          {running ? "Rodando…" : "Buscar todas as imagens"}
+        </Button>
+      </div>
+      {progress && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
+          <Stat label="Lote #" value={progress.iter} />
+          <Stat label="Verificados" value={progress.processed} />
+          <Stat label="Com imagem" value={progress.withImages} />
+          <Stat label="Imagens salvas" value={progress.imagesSaved} />
+          <Stat label="Faltam" value={progress.remaining} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded border border-border bg-background p-2 text-center">
+      <p className="text-base font-bold">{value}</p>
+      <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
