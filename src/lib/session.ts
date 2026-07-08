@@ -72,8 +72,24 @@ export function useSession(): SessionState {
         });
     }
 
-    supabase.auth.getSession().then(({ data }) => hydrate(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => hydrate(session));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        void hydrate(data.session);
+      })
+      .catch(() => {
+        if (!cancelled) setState({ ...empty, loading: false });
+      });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      // Do not return/await a Promise inside this callback. The auth client can
+      // hold its internal lock while dispatching auth events, and running table
+      // queries here directly can block every catalog query on authenticated
+      // page loads, leaving the home stuck in skeleton state.
+      window.setTimeout(() => {
+        void hydrate(session);
+      }, 0);
+    });
 
     return () => {
       cancelled = true;
