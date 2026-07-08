@@ -62,13 +62,16 @@ export default defineTool({
 
     const items = (data ?? []).map((p) => {
       const multi = stockByProduct.get(p.id);
-      const multiAvailable = multi ? Math.max(multi.on_hand - multi.reserved, 0) : 0;
+      const hasMulti = !!multi && multi.per_branch.length > 0;
+      const multiAvailable = hasMulti ? Math.max(multi!.on_hand - multi!.reserved, 0) : 0;
       const legacy = p.stock ?? 0;
-      const available_total = Math.max(multiAvailable, legacy);
+      // Regra: se existe estoque multi-filial, usa multi; senão, fallback legado. Nunca soma.
+      const available_total = hasMulti ? multiAvailable : legacy;
       return {
         sku: p.sku, slug: p.slug, name: p.name, active: p.active,
         legacy_stock: legacy,
         available_multi: multiAvailable,
+        source: hasMulti ? "multi" : "legacy",
         available_total,
         available: available_total > 0 && p.active,
         per_branch: multi?.per_branch ?? [],

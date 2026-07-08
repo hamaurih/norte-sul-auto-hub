@@ -1907,6 +1907,7 @@ export type Database = {
         Row: {
           available_effective: number | null
           available_multi: number | null
+          has_multi_stock: boolean | null
           legacy_stock: number | null
           on_hand_multi: number | null
           product_id: string | null
