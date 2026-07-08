@@ -44,7 +44,7 @@ export const listQuotes = createServerFn({ method: "GET" })
       .select("id, number, customer_name, customer_email, origin, status, total, created_at, valid_until")
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 100);
-    if (data.status) q = q.eq("status", data.status);
+    if (data.status) q = q.eq("status", data.status as any);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return rows ?? [];

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { listQuotes, setQuoteStatus } from "@/lib/quotes.functions";
-import { formatBRL } from "@/lib/format";
+import { brl as formatBRL } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
 const STATUSES = ["rascunho","enviado","em_negociacao","aprovado","recusado","convertido","expirado"] as const;

@@ -63,7 +63,14 @@ export const getBlingAudit = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertStaff(context.supabase, context.userId);
     const sb = context.supabase;
-    const { data: cfg } = await sb.from("bling_config").select("last_sync_at, connected, updated_at").maybeSingle();
+    const { data: cfg } = await sb.from("bling_config").select("access_token, active, updated_at").maybeSingle();
+    const { data: lastSync } = await sb
+      .from("bling_sync_logs")
+      .select("created_at")
+      .eq("status", "sucesso")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     const importados = await count(sb, "products", (q) => q.not("bling_id", "is", null));
     const erros = await count(sb, "bling_sync_logs", (q) => q.eq("status", "erro"));
     const sucesso24h = await count(sb, "bling_sync_logs", (q) =>
@@ -76,8 +83,8 @@ export const getBlingAudit = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(10);
     return {
-      last_sync_at: cfg?.last_sync_at ?? null,
-      connected: cfg?.connected ?? false,
+      last_sync_at: lastSync?.created_at ?? null,
+      connected: !!(cfg as any)?.access_token && !!(cfg as any)?.active,
       importados,
       erros_total: erros,
       sucesso_24h: sucesso24h,
