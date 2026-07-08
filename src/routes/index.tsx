@@ -56,18 +56,17 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  loader: async ({ context }) => {
-    // Prefetch above-the-fold data in parallel on the server so the HTML
-    // ships already populated (no skeleton flash on first paint).
-    await Promise.all(
-      HOME_QUERIES.map((q) =>
-        context.queryClient.ensureQueryData({
-          queryKey: [...q.queryKey],
-          queryFn: q.queryFn,
-          staleTime: 60_000,
-        }),
-      ),
-    );
+  loader: ({ context }) => {
+    // Fire-and-forget prefetch: primes the cache but never blocks the route
+    // from rendering. If a single Supabase query is slow the page still
+    // paints and individual sections resolve independently on the client.
+    for (const q of HOME_QUERIES) {
+      void context.queryClient.prefetchQuery({
+        queryKey: [...q.queryKey],
+        queryFn: q.queryFn,
+        staleTime: 60_000,
+      });
+    }
   },
   component: Home,
 });
