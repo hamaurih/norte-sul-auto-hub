@@ -261,6 +261,18 @@ function slugify(s: string) {
     .slice(0, 80);
 }
 
+function splitManufacturerCode(rawName: string) {
+  const normalizedName = (rawName || "").trim().replace(/\s+/g, " ");
+  const match = normalizedName.match(/^([A-Za-z0-9][A-Za-z0-9._/-]{2,})\s+(.+)$/);
+  if (!match || !/\d/.test(match[1])) {
+    return { name: normalizedName, manufacturerCode: null as string | null };
+  }
+  return {
+    name: match[2].trim(),
+    manufacturerCode: match[1].toUpperCase(),
+  };
+}
+
 async function uniqueSlug(supabase: any, base: string, blingId: string) {
   let slug = base || `produto-${blingId}`;
   const { data } = await supabase.from("products").select("id,bling_id").eq("slug", slug).maybeSingle();
@@ -290,7 +302,8 @@ export const syncBlingProducts = createServerFn({ method: "POST" })
         if (lista.length === 0) break;
         for (const p of lista) {
           const blingId = String(p.id);
-          const nome = p.nome ?? `Produto ${blingId}`;
+          const rawName = p.nome ?? `Produto ${blingId}`;
+          const { name: nome, manufacturerCode } = splitManufacturerCode(rawName);
           const sku = p.codigo ?? blingId;
           const preco = Number(p.preco ?? 0);
           const estoque = Number(p.estoque?.saldoVirtualTotal ?? p.estoque?.saldo ?? 0);
@@ -298,7 +311,7 @@ export const syncBlingProducts = createServerFn({ method: "POST" })
 
           const { data: existing } = await sb
             .from("products")
-            .select("id,slug")
+            .select("id,slug,manufacturer_code")
             .eq("bling_id", blingId)
             .maybeSingle();
 
@@ -307,6 +320,7 @@ export const syncBlingProducts = createServerFn({ method: "POST" })
               .from("products")
               .update({
                 name: nome,
+                manufacturer_code: manufacturerCode ?? existing.manufacturer_code ?? null,
                 sku,
                 price_b2c: preco,
                 stock: estoque,
@@ -321,6 +335,7 @@ export const syncBlingProducts = createServerFn({ method: "POST" })
               bling_id: blingId,
               sku,
               name: nome,
+              manufacturer_code: manufacturerCode,
               slug,
               price_b2c: preco,
               stock: estoque,
