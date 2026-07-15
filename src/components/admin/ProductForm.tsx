@@ -23,6 +23,7 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
     id: initial?.id ?? null,
     sku: initial?.sku ?? "",
     internal_code: initial?.internal_code ?? "",
+    manufacturer_code: initial?.manufacturer_code ?? "",
     name: initial?.name ?? "",
     slug: initial?.slug ?? "",
     short_description: initial?.short_description ?? "",
@@ -187,7 +188,8 @@ export function ProductForm({ initial }: { initial?: Partial<ProductInput> & { i
         <div className="grid gap-4 md:grid-cols-2">
           <L label="SKU *"><input required value={form.sku} onChange={(e) => update("sku", e.target.value)} className={inp} /></L>
           <L label="Código interno"><input value={form.internal_code ?? ""} onChange={(e) => update("internal_code", e.target.value)} className={inp} /></L>
-          <L label="Nome *" full>
+          <L label="Código do fabricante"><input value={form.manufacturer_code ?? ""} onChange={(e) => update("manufacturer_code", e.target.value.toUpperCase())} className={inp} placeholder="Ex.: 001CP" /></L>
+          <L label="Nome *">
             <input
               required
               value={form.name}
