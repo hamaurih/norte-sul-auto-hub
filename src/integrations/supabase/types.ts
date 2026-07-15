@@ -1135,6 +1135,7 @@ export type Database = {
           hide_when_out_of_stock: boolean
           id: string
           internal_code: string | null
+          manufacturer_code: string | null
           is_bestseller: boolean
           is_new: boolean
           is_offer: boolean
@@ -1166,6 +1167,7 @@ export type Database = {
           hide_when_out_of_stock?: boolean
           id?: string
           internal_code?: string | null
+          manufacturer_code?: string | null
           is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
@@ -1197,6 +1199,7 @@ export type Database = {
           hide_when_out_of_stock?: boolean
           id?: string
           internal_code?: string | null
+          manufacturer_code?: string | null
           is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
