@@ -11,6 +11,7 @@ export type ProductInput = {
   id?: string | null;
   sku: string;
   internal_code?: string | null;
+  manufacturer_code?: string | null;
   name: string;
   slug: string;
   short_description?: string | null;

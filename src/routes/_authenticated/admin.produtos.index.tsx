@@ -39,9 +39,9 @@ function ProductsList() {
     queryFn: async () => {
       let query = supabase
         .from("products")
-        .select("id, sku, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id, images:product_images(url, is_primary, sort_order)", { count: "exact" })
+        .select("id, sku, manufacturer_code, name, stock, price_b2c, sale_price_b2c, active, featured, is_new, is_bestseller, brand_id, category_id, images:product_images(url, is_primary, sort_order)", { count: "exact" })
         .order("name");
-      if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%`);
+      if (q) query = query.or(`name.ilike.%${q}%,sku.ilike.%${q}%,manufacturer_code.ilike.%${q}%`);
       if (filterCat) query = query.eq("category_id", filterCat);
       if (filterBrand) query = query.eq("brand_id", filterBrand);
       if (filterActive === "true") query = query.eq("active", true);
@@ -94,7 +94,7 @@ function ProductsList() {
       <div className="mb-3 grid gap-2 md:grid-cols-5">
         <div className="relative md:col-span-2">
           <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou SKU" className="w-full rounded border border-border bg-background p-2 pl-8 text-sm" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome, SKU ou cód. fabricante" className="w-full rounded border border-border bg-background p-2 pl-8 text-sm" />
         </div>
         <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="rounded border border-border bg-background p-2 text-sm">
           <option value="">Todas categorias</option>
@@ -129,6 +129,7 @@ function ProductsList() {
             <tr>
               <th className="p-2 text-center">Foto</th>
               <th className="p-2 text-left">SKU</th>
+              <th className="p-2 text-left">Cód. fabricante</th>
               <th className="p-2 text-left">Nome</th>
               <th className="p-2 text-right">Estoque</th>
               <th className="p-2 text-right">Preço</th>
@@ -158,6 +159,7 @@ function ProductsList() {
                     )}
                   </td>
                   <td className="p-2 font-mono text-xs">{p.sku}</td>
+                  <td className="p-2 font-mono text-xs">{p.manufacturer_code ?? "—"}</td>
                   <td className="p-2">{p.name}</td>
                   <td className={`p-2 text-right ${p.stock === 0 ? "text-destructive font-bold" : ""}`}>{p.stock}</td>
                   <td className="p-2 text-right">{brl(price)}</td>
@@ -176,7 +178,7 @@ function ProductsList() {
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
+              <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</td></tr>
             )}
           </tbody>
         </table>
