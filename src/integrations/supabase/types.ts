@@ -249,6 +249,63 @@ export type Database = {
           },
         ]
       }
+      audit_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          id: number
+          metadata: Json
+          organization_id: string
+          resource_id: string | null
+          resource_type: string
+          tenant_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: never
+          metadata?: Json
+          organization_id: string
+          resource_id?: string | null
+          resource_type: string
+          tenant_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          id?: never
+          metadata?: Json
+          organization_id?: string
+          resource_id?: string | null
+          resource_type?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2b_registrations: {
         Row: {
           admin_notes: string | null
@@ -490,6 +547,7 @@ export type Database = {
           name: string
           phone: string | null
           state: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -504,6 +562,7 @@ export type Database = {
           name: string
           phone?: string | null
           state?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -518,9 +577,18 @@ export type Database = {
           name?: string
           phone?: string | null
           state?: string | null
+          tenant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "branches_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       brands: {
         Row: {
@@ -983,6 +1051,77 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_memberships: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          organization_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          organization_id: string
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          legal_name: string
+          slug: string
+          status: string
+          tax_id: string | null
+          trade_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          legal_name: string
+          slug: string
+          status?: string
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          legal_name?: string
+          slug?: string
+          status?: string
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_applications: {
         Row: {
           id: string
@@ -1135,10 +1274,10 @@ export type Database = {
           hide_when_out_of_stock: boolean
           id: string
           internal_code: string | null
-          manufacturer_code: string | null
           is_bestseller: boolean
           is_new: boolean
           is_offer: boolean
+          manufacturer_code: string | null
           min_stock: number
           name: string
           price_b2b: number | null
@@ -1167,10 +1306,10 @@ export type Database = {
           hide_when_out_of_stock?: boolean
           id?: string
           internal_code?: string | null
-          manufacturer_code?: string | null
           is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
+          manufacturer_code?: string | null
           min_stock?: number
           name: string
           price_b2b?: number | null
@@ -1199,10 +1338,10 @@ export type Database = {
           hide_when_out_of_stock?: boolean
           id?: string
           internal_code?: string | null
-          manufacturer_code?: string | null
           is_bestseller?: boolean
           is_new?: boolean
           is_offer?: boolean
+          manufacturer_code?: string | null
           min_stock?: number
           name?: string
           price_b2b?: number | null
@@ -1920,6 +2059,123 @@ export type Database = {
           },
         ]
       }
+      tenant_memberships: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          role: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          role: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_memberships_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_modules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          module_key: string
+          settings: Json
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_key: string
+          settings?: Json
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          module_key?: string
+          settings?: Json
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_modules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          name: string
+          organization_id: string
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          id?: string
+          name: string
+          organization_id: string
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1950,6 +2206,7 @@ export type Database = {
           id: string
           is_default: boolean
           name: string
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -1960,6 +2217,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name: string
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -1970,14 +2228,22 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "warehouses_branch_id_fkey"
-            columns: ["branch_id"]
+            foreignKeyName: "warehouses_branch_tenant_fkey"
+            columns: ["branch_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "warehouses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
