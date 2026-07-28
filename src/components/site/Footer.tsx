@@ -94,7 +94,7 @@ export function Footer() {
             <li className="flex items-center gap-2"><MessageCircle className="h-4 w-4" /> WhatsApp comercial</li>
             <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> {company?.email || "E-mail não informado"}</li>
             <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {address || company?.business_hours || "Endereço não informado"}</li>
-            {address && <li className="pl-6 text-xs">{company?.business_hours || "Horário não informado"}</li>
+            {address && <li className="pl-6 text-xs">{company?.business_hours || "Horário não informado"}</li>}
           </ul>
         </div>
 
