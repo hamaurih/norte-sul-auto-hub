@@ -40,8 +40,12 @@ function ActivationPage() {
   const [token, setToken] = useState("");
 
   useEffect(() => {
-    if (tokenFromUrl) setToken(tokenFromUrl);
-  }, [tokenFromUrl]);
+    if (!tokenFromUrl) return;
+    setToken(tokenFromUrl);
+    // Remove o token da URL para não ficar no histórico/referrer.
+    void navigate({ to: "/ativacao", search: {}, replace: true });
+  }, [tokenFromUrl, navigate]);
+
 
   useEffect(() => {
     if (!isLoading && context && !context.user_id) {
