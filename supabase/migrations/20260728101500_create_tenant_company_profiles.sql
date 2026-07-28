@@ -97,7 +97,7 @@ values (
   'tenant-branding',
   true,
   5242880,
-  array['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml', 'image/x-icon']
+  array['image/png', 'image/jpeg', 'image/webp', 'image/x-icon']
 )
 on conflict (id) do update set
   public = excluded.public,
