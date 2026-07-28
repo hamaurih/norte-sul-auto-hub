@@ -6,13 +6,36 @@ async function assertStaff(sb: any, userId: string, roles: string[] = ["admin", 
   if (!(data ?? []).some((r: { role: string }) => roles.includes(r.role))) throw new Error("Forbidden");
 }
 
+async function requireTenantRole(
+  sb: any,
+  userId: string,
+  roles: string[] = ["owner", "admin", "manager"],
+) {
+  const { data, error } = await sb
+    .from("tenant_memberships")
+    .select("tenant_id, role")
+    .eq("user_id", userId)
+    .eq("active", true);
+
+  if (error) throw new Error(error.message);
+  const membership = (data ?? []).find((item: { role: string }) => roles.includes(item.role));
+  if (!membership) throw new Error("Usuário sem acesso ativo a esta empresa");
+  return membership as { tenant_id: string; role: string };
+}
+
 // ============ Filiais ============
 export const listBranches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
+    );
     const { data, error } = await context.supabase
       .from("branches")
-      .select("*, warehouses(id, name, code, is_default, active)")
+      .select("*, warehouses(id, name, code, is_default, active, tenant_id)")
+      .eq("tenant_id", membership.tenant_id)
       .order("is_main", { ascending: false })
       .order("name");
     if (error) throw new Error(error.message);
@@ -27,17 +50,18 @@ export const upsertBranch = createServerFn({ method: "POST" })
     email?: string | null; is_main?: boolean; active?: boolean;
   }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireTenantRole(context.supabase, context.userId);
     const { id, ...row } = data;
     if (id) {
-      const { error } = await context.supabase.from("branches").update(row).eq("id", id);
+      const { error } = await context.supabase.from("branches").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: ins, error } = await context.supabase.from("branches").insert(row).select("id").single();
+    const { data: ins, error } = await context.supabase.from("branches").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
     if (error) throw new Error(error.message);
     // Criar depósito padrão automático
     await context.supabase.from("warehouses").insert({
+      tenant_id: membership.tenant_id,
       branch_id: ins.id,
       name: "Depósito Principal",
       code: `DEP-${row.code}`,
@@ -51,14 +75,18 @@ export const upsertWarehouse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id?: string; branch_id: string; name: string; code: string; is_default?: boolean; active?: boolean }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock"],
+    );
     const { id, ...row } = data;
     if (id) {
-      const { error } = await context.supabase.from("warehouses").update(row).eq("id", id);
+      const { error } = await context.supabase.from("warehouses").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: ins, error } = await context.supabase.from("warehouses").insert(row).select("id").single();
+    const { data: ins, error } = await context.supabase.from("warehouses").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id };
   });
