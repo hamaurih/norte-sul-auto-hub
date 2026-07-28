@@ -8,6 +8,7 @@ import {
   environmentLabel,
   fetchAccessContext,
   isOrganizationAdmin,
+  isLegacyStaff,
   useAccessContext,
 } from "@/lib/access";
 import { createInvitation, listInvitations, revokeInvitation } from "@/lib/access.functions";

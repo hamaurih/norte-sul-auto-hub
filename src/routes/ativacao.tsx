@@ -5,7 +5,7 @@ import { ShieldCheck, MailCheck, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { tdb } from "@/integrations/supabase/tenant-db";
-import { hasAnyMembership, useAccessContext } from "@/lib/access";
+import { hasAnyMembership, useAccessContext, useIsLegacyStaff } from "@/lib/access";
 
 export const Route = createFileRoute("/ativacao")({
   ssr: false,
