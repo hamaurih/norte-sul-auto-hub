@@ -1,10 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertStaff(sb: any, userId: string) {
-  const { data } = await sb.from("user_roles").select("role").eq("user_id", userId);
-  if (!(data ?? []).some((r: { role: string }) => ["admin", "gerente", "vendedor"].includes(r.role)))
-    throw new Error("Forbidden");
+async function requireTenantSalesRole(sb: any, userId: string) {
+  const { data, error } = await sb
+    .from("tenant_memberships")
+    .select("tenant_id, role")
+    .eq("user_id", userId)
+    .eq("active", true);
+  if (error) throw new Error(error.message);
+  const membership = (data ?? []).find((item: { role: string }) =>
+    ["owner", "admin", "manager", "sales"].includes(item.role),
+  );
+  if (!membership) throw new Error("Usuário sem acesso comercial ativo");
+  return membership as { tenant_id: string; role: string };
 }
 
 export type QuoteItemInput = {
@@ -38,10 +46,11 @@ export const listQuotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { status?: string; limit?: number }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireTenantSalesRole(context.supabase, context.userId);
     let q = context.supabase
       .from("quotes")
       .select("id, number, customer_name, customer_email, origin, status, total, created_at, valid_until")
+      .eq("tenant_id", membership.tenant_id)
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 100);
     if (data.status) q = q.eq("status", data.status as any);
@@ -54,10 +63,11 @@ export const getQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireTenantSalesRole(context.supabase, context.userId);
     const { data: q, error } = await context.supabase
       .from("quotes")
       .select("*, items:quote_items(*)")
+      .eq("tenant_id", membership.tenant_id)
       .eq("id", data.id)
       .single();
     if (error) throw new Error(error.message);
@@ -68,12 +78,13 @@ export const upsertQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: QuoteInput) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireTenantSalesRole(context.supabase, context.userId);
     const sb = context.supabase;
     const items = data.items ?? [];
     const subtotal = items.reduce((s, i) => s + i.qty * i.unit_price - (i.discount ?? 0), 0);
     const total = Math.max(subtotal - (data.discount ?? 0), 0);
     const row = {
+      tenant_id: membership.tenant_id,
       customer_id: data.customer_id ?? null,
       customer_name: data.customer_name ?? null,
       customer_email: data.customer_email ?? null,
@@ -92,9 +103,9 @@ export const upsertQuote = createServerFn({ method: "POST" })
     };
     let quoteId = data.id;
     if (quoteId) {
-      const { error } = await sb.from("quotes").update(row).eq("id", quoteId);
+      const { error } = await sb.from("quotes").update(row).eq("id", quoteId).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
-      await sb.from("quote_items").delete().eq("quote_id", quoteId);
+      await sb.from("quote_items").delete().eq("tenant_id", membership.tenant_id).eq("quote_id", quoteId);
     } else {
       const { data: ins, error } = await sb.from("quotes").insert(row).select("id").single();
       if (error) throw new Error(error.message);
@@ -102,6 +113,7 @@ export const upsertQuote = createServerFn({ method: "POST" })
     }
     if (items.length > 0) {
       const { error } = await sb.from("quote_items").insert(items.map((i) => ({
+        tenant_id: membership.tenant_id,
         quote_id: quoteId!,
         product_id: i.product_id ?? null,
         sku: i.sku ?? null,
@@ -121,8 +133,8 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string; status: QuoteInput["status"] }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
-    const { error } = await context.supabase.from("quotes").update({ status: data.status }).eq("id", data.id);
+    const membership = await requireTenantSalesRole(context.supabase, context.userId);
+    const { error } = await context.supabase.from("quotes").update({ status: data.status }).eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
