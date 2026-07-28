@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { activeTenantSlug } from "@/integrations/supabase/client";
 import { createStorefrontOrder } from "@/lib/order.functions";
 import { useCart, cartStore } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
@@ -85,7 +84,6 @@ function Checkout() {
     try {
       const result = await createStorefrontOrder({
         data: {
-          tenantSlug: activeTenantSlug(),
           customer: {
             name: parsed.data.customer_name,
             email: parsed.data.customer_email,
@@ -111,7 +109,7 @@ function Checkout() {
       idempotencyKey.current = crypto.randomUUID();
 
       cartStore.clear();
-      toast.success("Pedido criado! Estamos enviando ao Bling…");
+      toast.success("Pedido criado e estoque reservado.");
       navigate({ to: "/pedidos" });
     } catch (err) {
       console.error(err);
@@ -187,7 +185,7 @@ function Checkout() {
             {saving ? "Enviando…" : "Confirmar pedido"}
           </button>
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Ao confirmar, seu pedido será enviado à integração Bling quando disponível.
+            Ao confirmar, o estoque será reservado até a confirmação do pagamento.
           </p>
         </aside>
       </form>
