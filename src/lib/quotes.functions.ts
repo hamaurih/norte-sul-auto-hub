@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { tdb } from "@/integrations/supabase/tenant-db";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function requireTenantSalesRole(sb: any, userId: string, tenantId: string) {
@@ -47,8 +48,8 @@ export const listQuotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { status?: string; limit?: number }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantSalesRole(context.supabase, context.userId, context.tenantId);
-    let q = context.supabase
+    const membership = await requireTenantSalesRole(tdb(context.supabase), context.userId, context.tenantId);
+    let q = tdb(context.supabase)
       .from("quotes")
       .select("id, number, customer_name, customer_email, origin, status, total, created_at, valid_until")
       .eq("tenant_id", membership.tenant_id)
@@ -64,8 +65,8 @@ export const getQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantSalesRole(context.supabase, context.userId, context.tenantId);
-    const { data: q, error } = await context.supabase
+    const membership = await requireTenantSalesRole(tdb(context.supabase), context.userId, context.tenantId);
+    const { data: q, error } = await tdb(context.supabase)
       .from("quotes")
       .select("*, items:quote_items(*)")
       .eq("tenant_id", membership.tenant_id)
@@ -79,8 +80,8 @@ export const upsertQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: QuoteInput) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantSalesRole(context.supabase, context.userId, context.tenantId);
-    const sb = context.supabase;
+    const membership = await requireTenantSalesRole(tdb(context.supabase), context.userId, context.tenantId);
+    const sb = tdb(context.supabase);
     const items = data.items ?? [];
     const subtotal = items.reduce((s, i) => s + i.qty * i.unit_price - (i.discount ?? 0), 0);
     const total = Math.max(subtotal - (data.discount ?? 0), 0);
@@ -134,8 +135,8 @@ export const setQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string; status: QuoteInput["status"] }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantSalesRole(context.supabase, context.userId, context.tenantId);
-    const { error } = await context.supabase.from("quotes").update({ status: data.status }).eq("id", data.id).eq("tenant_id", membership.tenant_id);
+    const membership = await requireTenantSalesRole(tdb(context.supabase), context.userId, context.tenantId);
+    const { error } = await tdb(context.supabase).from("quotes").update({ status: data.status }).eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

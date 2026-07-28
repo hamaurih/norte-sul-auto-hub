@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
+import { fetchAccessContext } from "@/lib/access";
 import {
   LayoutDashboard,
   Users,
@@ -41,9 +42,15 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) throw redirect({ to: "/auth" });
+
+    // Membership decides access. An authenticated user without any membership
+    // goes to the activation screen, never to a generic error or a loop.
+    const context = await fetchAccessContext();
+    if (context.organizations.length > 0 || context.tenants.length > 0) return;
+
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userRes.user.id);
     const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "gerente");
-    if (!isStaff) throw redirect({ to: "/" });
+    if (!isStaff) throw redirect({ to: "/ativacao" });
   },
   component: AdminLayout,
 });
@@ -82,6 +89,7 @@ const items: Item[] = [
   { to: "/admin/saneamento", label: "Saneamento", icon: ShieldAlert, group: "sistema", adminOnly: true },
   { to: "/admin/saneamento/aliases", label: "Aliases", icon: Tag, group: "sistema", adminOnly: true },
   { to: "/admin/auditoria", label: "Auditoria", icon: ClipboardCheck, group: "sistema", adminOnly: true },
+  { to: "/admin/homologacao", label: "Homologação", icon: ClipboardCheck, group: "sistema", adminOnly: true },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, group: "sistema", adminOnly: true },
 ];
 

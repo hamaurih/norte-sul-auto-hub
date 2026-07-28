@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { tdb } from "@/integrations/supabase/tenant-db";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function requireCatalogTenant(supabase: any, userId: string, tenantId: string) {
@@ -50,7 +51,8 @@ export const productUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: ProductInput) => input)
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase: rawSupabase, userId } = context;
+    const supabase = tdb(rawSupabase);
     const membership = await requireCatalogTenant(supabase, userId, context.tenantId);
     const { images, id, ...row } = data;
     const payload = { ...row, tenant_id: membership.tenant_id, updated_at: new Date().toISOString() };
@@ -86,8 +88,8 @@ export const productDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
-    const { error } = await context.supabase
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
+    const { error } = await tdb(context.supabase)
       .from("products")
       .delete()
       .eq("id", data.id)
@@ -100,9 +102,9 @@ export const productToggle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string; field: "active" | "featured" | "is_new" | "is_bestseller" | "is_offer"; value: boolean }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
     const patch: Record<string, boolean> = { [data.field]: data.value };
-    const { error } = await context.supabase.from("products").update(patch as never).eq("id", data.id).eq("tenant_id", membership.tenant_id);
+    const { error } = await tdb(context.supabase).from("products").update(patch as never).eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -111,8 +113,8 @@ export const productDuplicate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
-    const { data: src, error } = await context.supabase
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
+    const { data: src, error } = await tdb(context.supabase)
       .from("products")
       .select("*")
       .eq("id", data.id)
@@ -128,12 +130,12 @@ export const productDuplicate = createServerFn({ method: "POST" })
       name: `${src.name} (cópia)`,
       active: false,
     };
-    const { data: inserted, error: insErr } = await context.supabase.from("products").insert(copy).select("id").single();
+    const { data: inserted, error: insErr } = await tdb(context.supabase).from("products").insert(copy).select("id").single();
     if (insErr) throw new Error(insErr.message);
     // Copy images
-    const { data: imgs } = await context.supabase.from("product_images").select("url, alt, is_primary, sort_order").eq("product_id", data.id).eq("tenant_id", membership.tenant_id);
+    const { data: imgs } = await tdb(context.supabase).from("product_images").select("url, alt, is_primary, sort_order").eq("product_id", data.id).eq("tenant_id", membership.tenant_id);
     if (imgs && imgs.length > 0) {
-      await context.supabase.from("product_images").insert(imgs.map((i) => ({ ...i, product_id: inserted.id, tenant_id: membership.tenant_id })));
+      await tdb(context.supabase).from("product_images").insert(imgs.map((i) => ({ ...i, product_id: inserted.id, tenant_id: membership.tenant_id })));
     }
     return { ok: true, id: inserted.id };
   });
