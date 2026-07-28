@@ -20,8 +20,7 @@ import { CompanyTheme } from "@/components/site/CompanyTheme";
 
 function NotFoundComponent() {
   return (
-    <CompanyTheme />
-      <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <div className="flex flex-1 items-center justify-center bg-background px-4 py-20">
         <div className="max-w-md text-center">
@@ -118,6 +117,7 @@ function RootComponent() {
   const hideChrome = isAuth || isPanel;
   return (
     <QueryClientProvider client={queryClient}>
+      <CompanyTheme />
       <div className="flex min-h-screen flex-col">
         {!hideChrome && <Header />}
         {isPanel && <TenantEnvironmentSwitcher />}
