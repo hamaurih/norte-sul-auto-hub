@@ -26,9 +26,8 @@ export const Route = createFileRoute("/ativacao")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    token: typeof search.token === "string" ? search.token : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { token?: string } =>
+    typeof search.token === "string" ? { token: search.token } : {},
   component: ActivationPage,
 });
 
@@ -43,7 +42,7 @@ function ActivationPage() {
     if (!tokenFromUrl) return;
     setToken(tokenFromUrl);
     // Remove o token da URL para não ficar no histórico/referrer.
-    void navigate({ to: "/ativacao", search: {}, replace: true });
+    void navigate({ to: "/ativacao", search: () => ({}), replace: true });
   }, [tokenFromUrl, navigate]);
 
 
