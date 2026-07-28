@@ -99,6 +99,107 @@ alter table public.quote_items alter column tenant_id set not null;
 alter table public.orders alter column tenant_id set not null;
 alter table public.order_items alter column tenant_id set not null;
 
+insert into public.customers (
+  tenant_id, user_id, name, email, phone, document,
+  customer_group, b2b_status
+)
+select distinct on (sale.tenant_id, sale.user_id)
+  sale.tenant_id,
+  sale.user_id,
+  sale.customer_name,
+  coalesce(sale.customer_email, auth_user.email),
+  sale.customer_phone,
+  sale.customer_document,
+  coalesce(profile.customer_group, 'b2c'),
+  coalesce(profile.b2b_status, 'none')
+from public.orders sale
+left join auth.users auth_user on auth_user.id = sale.user_id
+left join public.profiles profile on profile.id = sale.user_id
+order by sale.tenant_id, sale.user_id, sale.created_at desc
+on conflict (tenant_id, user_id) do nothing;
+
+insert into public.customers (
+  tenant_id, user_id, name, email, phone,
+  customer_group, b2b_status
+)
+select distinct on (quote.tenant_id, quote.customer_id)
+  quote.tenant_id,
+  quote.customer_id,
+  coalesce(quote.customer_name, profile.full_name, auth_user.email, 'Cliente'),
+  coalesce(quote.customer_email, auth_user.email),
+  coalesce(quote.customer_phone, profile.phone),
+  coalesce(profile.customer_group, 'b2c'),
+  coalesce(profile.b2b_status, 'none')
+from public.quotes quote
+left join auth.users auth_user on auth_user.id = quote.customer_id
+left join public.profiles profile on profile.id = quote.customer_id
+where quote.customer_id is not null
+order by quote.tenant_id, quote.customer_id, quote.created_at desc
+on conflict (tenant_id, user_id) do nothing;
+
+insert into public.customers (
+  tenant_id, user_id, name, email, phone,
+  customer_group, b2b_status
+)
+select distinct on (link.tenant_id, link.customer_id)
+  link.tenant_id,
+  link.customer_id,
+  coalesce(profile.full_name, auth_user.email, link.lead_name, 'Cliente'),
+  coalesce(auth_user.email, link.lead_email),
+  coalesce(profile.phone, link.lead_phone),
+  coalesce(profile.customer_group, 'b2c'),
+  coalesce(profile.b2b_status, 'none')
+from public.sales_rep_customers link
+left join auth.users auth_user on auth_user.id = link.customer_id
+left join public.profiles profile on profile.id = link.customer_id
+where link.customer_id is not null
+order by link.tenant_id, link.customer_id, link.created_at desc
+on conflict (tenant_id, user_id) do nothing;
+
+insert into public.customers (
+  tenant_id, user_id, name, email, phone, document,
+  customer_group, b2b_status
+)
+select distinct on (sale.tenant_id, sale.customer_id)
+  sale.tenant_id,
+  sale.customer_id,
+  coalesce(profile.full_name, auth_user.email, sale.lead_name, 'Cliente'),
+  coalesce(auth_user.email, sale.lead_email),
+  coalesce(profile.phone, sale.lead_phone),
+  sale.lead_cnpj,
+  coalesce(profile.customer_group, 'b2c'),
+  coalesce(profile.b2b_status, 'none')
+from public.sales_orders sale
+left join auth.users auth_user on auth_user.id = sale.customer_id
+left join public.profiles profile on profile.id = sale.customer_id
+where sale.customer_id is not null
+order by sale.tenant_id, sale.customer_id, sale.created_at desc
+on conflict (tenant_id, user_id) do nothing;
+
+update public.orders sale
+set customer_id = customer.id
+from public.customers customer
+where customer.tenant_id = sale.tenant_id
+  and customer.user_id = sale.user_id;
+
+update public.quotes quote
+set customer_id = customer.id
+from public.customers customer
+where customer.tenant_id = quote.tenant_id
+  and customer.user_id = quote.customer_id;
+
+update public.sales_rep_customers link
+set customer_id = customer.id
+from public.customers customer
+where customer.tenant_id = link.tenant_id
+  and customer.user_id = link.customer_id;
+
+update public.sales_orders sale
+set customer_id = customer.id
+from public.customers customer
+where customer.tenant_id = sale.tenant_id
+  and customer.user_id = sale.customer_id;
+
 alter table public.sales_reps
   drop constraint sales_reps_email_key,
   drop constraint sales_reps_user_id_key,
