@@ -15,6 +15,7 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
       .from("tenant_memberships")
       .select("tenant_id, role")
       .eq("user_id", userId)
+      .eq("tenant_id", context.tenantId)
       .eq("active", true);
     if (membershipError) throw new Error(membershipError.message);
     const membership = (memberships ?? []).find((item) =>
