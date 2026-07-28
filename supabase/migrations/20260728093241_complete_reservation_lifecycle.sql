@@ -9,6 +9,9 @@ alter function public.create_storefront_order(jsonb, jsonb, text, uuid)
 
 revoke all on function private.create_storefront_order(jsonb, jsonb, text, uuid)
   from public, anon, authenticated;
+grant usage on schema private to service_role;
+grant execute on function private.create_storefront_order(jsonb, jsonb, text, uuid)
+  to service_role;
 
 create or replace function public.internal_create_storefront_order(
   p_user_id uuid,
@@ -24,7 +27,7 @@ security invoker
 set search_path = ''
 as $function$
 begin
-  if current_setting('request.jwt.claims', true)::jsonb ->> 'role' <> 'service_role' then
+  if current_user <> 'service_role' then
     raise exception 'service role required';
   end if;
 
@@ -239,6 +242,8 @@ $function$;
 
 revoke all on function private.transition_order(uuid, text, uuid)
   from public, anon, authenticated;
+grant execute on function private.transition_order(uuid, text, uuid)
+  to service_role;
 
 create or replace function private.expire_stock_reservations()
 returns integer
@@ -271,6 +276,8 @@ $function$;
 
 revoke all on function private.expire_stock_reservations()
   from public, anon, authenticated;
+grant execute on function private.expire_stock_reservations()
+  to service_role;
 
 create or replace function public.internal_transition_order(
   p_order_id uuid,
@@ -283,7 +290,7 @@ security invoker
 set search_path = ''
 as $function$
 begin
-  if current_setting('request.jwt.claims', true)::jsonb ->> 'role' <> 'service_role' then
+  if current_user <> 'service_role' then
     raise exception 'service role required';
   end if;
 
