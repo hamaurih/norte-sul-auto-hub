@@ -815,6 +815,59 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          active: boolean
+          b2b_status: Database["public"]["Enums"]["b2b_approval_status"]
+          created_at: string
+          customer_group: Database["public"]["Enums"]["customer_group"]
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          b2b_status?: Database["public"]["Enums"]["b2b_approval_status"]
+          created_at?: string
+          customer_group?: Database["public"]["Enums"]["customer_group"]
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          b2b_status?: Database["public"]["Enums"]["b2b_approval_status"]
+          created_at?: string
+          customer_group?: Database["public"]["Enums"]["customer_group"]
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_logs: {
         Row: {
           created_at: string
@@ -941,6 +994,7 @@ export type Database = {
           product_id: string | null
           quantity: number
           sku: string
+          tenant_id: string
           total: number
           unit_price: number
         }
@@ -951,6 +1005,7 @@ export type Database = {
           product_id?: string | null
           quantity: number
           sku: string
+          tenant_id: string
           total: number
           unit_price: number
         }
@@ -961,30 +1016,38 @@ export type Database = {
           product_id?: string | null
           quantity?: number
           sku?: string
+          tenant_id?: string
           total?: number
           unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "order_items_order_tenant_fkey"
+            columns: ["order_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "orders"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "v_product_stock_available"
-            referencedColumns: ["product_id"]
+            referencedColumns: ["product_id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "order_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -995,10 +1058,12 @@ export type Database = {
           created_at: string
           customer_document: string | null
           customer_email: string
+          customer_id: string | null
           customer_name: string
           customer_phone: string | null
           discount: number
           id: string
+          idempotency_key: string | null
           is_b2b: boolean
           notes: string | null
           payment_method: string | null
@@ -1012,6 +1077,7 @@ export type Database = {
           shipping_zip: string | null
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
+          tenant_id: string
           total: number
           updated_at: string
           user_id: string
@@ -1022,10 +1088,12 @@ export type Database = {
           created_at?: string
           customer_document?: string | null
           customer_email: string
+          customer_id?: string | null
           customer_name: string
           customer_phone?: string | null
           discount?: number
           id?: string
+          idempotency_key?: string | null
           is_b2b?: boolean
           notes?: string | null
           payment_method?: string | null
@@ -1039,6 +1107,7 @@ export type Database = {
           shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
+          tenant_id: string
           total?: number
           updated_at?: string
           user_id: string
@@ -1049,10 +1118,12 @@ export type Database = {
           created_at?: string
           customer_document?: string | null
           customer_email?: string
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string | null
           discount?: number
           id?: string
+          idempotency_key?: string | null
           is_b2b?: boolean
           notes?: string | null
           payment_method?: string | null
@@ -1066,11 +1137,27 @@ export type Database = {
           shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
+          tenant_id?: string
           total?: number
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_tenant_fkey"
+            columns: ["customer_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organization_memberships: {
         Row: {
@@ -1563,6 +1650,7 @@ export type Database = {
           qty: number
           quote_id: string
           sku: string | null
+          tenant_id: string
           total: number
           unit_price: number
         }
@@ -1576,6 +1664,7 @@ export type Database = {
           qty: number
           quote_id: string
           sku?: string | null
+          tenant_id: string
           total: number
           unit_price: number
         }
@@ -1589,29 +1678,37 @@ export type Database = {
           qty?: number
           quote_id?: string
           sku?: string | null
+          tenant_id?: string
           total?: number
           unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "quote_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "quote_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "quote_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "quote_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "v_product_stock_available"
-            referencedColumns: ["product_id"]
+            referencedColumns: ["product_id", "tenant_id"]
           },
           {
-            foreignKeyName: "quote_items_quote_id_fkey"
-            columns: ["quote_id"]
+            foreignKeyName: "quote_items_quote_tenant_fkey"
+            columns: ["quote_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "quotes"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "quote_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1634,6 +1731,7 @@ export type Database = {
           sales_rep_id: string | null
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number
+          tenant_id: string
           total: number
           updated_at: string
           valid_until: string | null
@@ -1655,6 +1753,7 @@ export type Database = {
           sales_rep_id?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
+          tenant_id: string
           total?: number
           updated_at?: string
           valid_until?: string | null
@@ -1676,30 +1775,38 @@ export type Database = {
           sales_rep_id?: string | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
+          tenant_id?: string
           total?: number
           updated_at?: string
           valid_until?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "quotes_branch_id_fkey"
-            columns: ["branch_id"]
+            foreignKeyName: "quotes_branch_tenant_fkey"
+            columns: ["branch_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "branches"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "quotes_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "quotes_customer_tenant_fkey"
+            columns: ["customer_id", "tenant_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "customers"
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "quotes_sales_rep_id_fkey"
-            columns: ["sales_rep_id"]
+            foreignKeyName: "quotes_sales_rep_tenant_fkey"
+            columns: ["sales_rep_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "sales_reps"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "quotes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1720,6 +1827,7 @@ export type Database = {
           rep_id: string
           status: string
           subtotal: number
+          tenant_id: string
           total: number
           updated_at: string
         }
@@ -1738,6 +1846,7 @@ export type Database = {
           rep_id: string
           status?: string
           subtotal?: number
+          tenant_id: string
           total?: number
           updated_at?: string
         }
@@ -1756,22 +1865,37 @@ export type Database = {
           rep_id?: string
           status?: string
           subtotal?: number
+          tenant_id?: string
           total?: number
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sales_orders_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "sales_orders_customer_tenant_fkey"
+            columns: ["customer_id", "tenant_id"]
             isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
+            referencedRelation: "customers"
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "sales_orders_rep_id_fkey"
-            columns: ["rep_id"]
+            foreignKeyName: "sales_orders_order_tenant_fkey"
+            columns: ["order_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "sales_orders_rep_tenant_fkey"
+            columns: ["rep_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "sales_reps"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "sales_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1787,6 +1911,7 @@ export type Database = {
           lead_phone: string | null
           notes: string | null
           rep_id: string
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -1799,6 +1924,7 @@ export type Database = {
           lead_phone?: string | null
           notes?: string | null
           rep_id: string
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -1811,14 +1937,29 @@ export type Database = {
           lead_phone?: string | null
           notes?: string | null
           rep_id?: string
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sales_rep_customers_rep_id_fkey"
-            columns: ["rep_id"]
+            foreignKeyName: "sales_rep_customers_customer_tenant_fkey"
+            columns: ["customer_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "sales_rep_customers_rep_tenant_fkey"
+            columns: ["rep_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "sales_reps"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "sales_rep_customers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1839,6 +1980,7 @@ export type Database = {
           max_discount_pct: number
           notes: string | null
           phone: string | null
+          tenant_id: string
           updated_at: string
           user_id: string | null
         }
@@ -1857,6 +1999,7 @@ export type Database = {
           max_discount_pct?: number
           notes?: string | null
           phone?: string | null
+          tenant_id: string
           updated_at?: string
           user_id?: string | null
         }
@@ -1875,10 +2018,19 @@ export type Database = {
           max_discount_pct?: number
           notes?: string | null
           phone?: string | null
+          tenant_id?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_reps_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       search_aliases: {
         Row: {
@@ -2012,6 +2164,81 @@ export type Database = {
           },
           {
             foreignKeyName: "stock_movements_warehouse_tenant_fkey"
+            columns: ["warehouse_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id", "tenant_id"]
+          },
+        ]
+      }
+      stock_reservations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          status: string
+          tenant_id: string
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          order_id: string
+          product_id: string
+          quantity: number
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reservations_order_tenant_fkey"
+            columns: ["order_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_warehouse_tenant_fkey"
             columns: ["warehouse_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
@@ -2374,7 +2601,15 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      create_storefront_order: {
+        Args: {
+          p_customer: Json
+          p_idempotency_key: string
+          p_items: Json
+          p_payment_method: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "gerente" | "vendedor" | "cliente"
