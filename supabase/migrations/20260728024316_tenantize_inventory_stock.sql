@@ -249,8 +249,7 @@ revoke all on table public.stock_transfers from anon, authenticated;
 revoke all on table public.stock_transfer_items from anon, authenticated;
 revoke all on table public.v_product_stock_available from anon, authenticated;
 
-grant select (tenant_id, product_id, on_hand, reserved)
-  on table public.product_stock to anon;
+grant select on table public.product_stock to anon;
 grant select, insert, update, delete
   on table public.product_stock to authenticated;
 grant select, insert
