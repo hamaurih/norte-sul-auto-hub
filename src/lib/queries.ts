@@ -60,7 +60,7 @@ const PRODUCT_SELECT = `
   price_b2c, compare_at_price, stock,
   featured, is_new, is_offer, sales_count,
   brand:brands(name, slug),
-  category:categories!products_category_id_fkey(name, slug),
+  category:categories!products_category_tenant_fkey(name, slug),
   images:product_images(url, is_primary, sort_order)
 `;
 
