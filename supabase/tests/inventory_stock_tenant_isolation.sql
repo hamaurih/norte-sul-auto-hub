@@ -31,7 +31,7 @@ where product.slug = 'produto-estoque' and warehouse.code = 'DEP-EST';
 set local role anon;
 select set_config('request.headers', '{"x-tenant-slug":"norte-sul-real"}', true);
 do $test$
-declare available integer;
+declare available integer; location_count integer;
 begin
   select available_effective into available
   from public.v_product_stock_available
@@ -40,6 +40,16 @@ begin
   );
   if available <> 9 then
     raise exception 'Production stock isolation failed: %', available;
+  end if;
+  select count(*) into location_count
+  from public.product_stock stock
+  join public.warehouses warehouse on warehouse.id = stock.warehouse_id
+  join public.branches branch on branch.id = warehouse.branch_id
+  where stock.product_id = (
+    select id from public.products where slug = 'produto-estoque'
+  );
+  if location_count <> 1 then
+    raise exception 'Production stock location visibility failed: %', location_count;
   end if;
 end;
 $test$;
