@@ -6,9 +6,24 @@ function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
 
-function publicTenantSlug(): string {
+const ACTIVE_TENANT_KEY = 'auto-deal-active-tenant';
+const ACTIVE_TENANT_COOKIE = 'auto_deal_tenant_slug';
+
+export function activeTenantSlug(): string {
+  if (typeof window !== 'undefined') {
+    const selected = window.localStorage.getItem(ACTIVE_TENANT_KEY);
+    if (selected) return selected;
+  }
   const serverValue = typeof process !== 'undefined' ? process.env.PUBLIC_TENANT_SLUG : undefined;
   return import.meta.env.VITE_PUBLIC_TENANT_SLUG || serverValue || 'norte-sul-real';
+}
+
+export function setActiveTenantSlug(slug: string): void {
+  if (!/^norte-sul-(real|demo)$/.test(slug)) throw new Error('Tenant inválido');
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(ACTIVE_TENANT_KEY, slug);
+  document.cookie = `${ACTIVE_TENANT_COOKIE}=${slug}; Path=/; SameSite=Lax; Max-Age=31536000`;
+  window.location.reload();
 }
 
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
@@ -27,7 +42,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
     }
 
     headers.set('apikey', supabaseKey);
-    if (!headers.has('x-tenant-slug')) headers.set('x-tenant-slug', publicTenantSlug());
+    if (!headers.has('x-tenant-slug')) headers.set('x-tenant-slug', activeTenantSlug());
     return fetch(input, { ...init, headers });
   };
 }
