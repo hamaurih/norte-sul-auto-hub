@@ -6,6 +6,7 @@ async function requireCatalogTenant(supabase: any, userId: string) {
     .from("tenant_memberships")
     .select("tenant_id, role")
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("active", true);
   if (error) throw new Error(error.message);
   const membership = (data ?? []).find((item: { role: string }) =>
@@ -85,7 +86,7 @@ export const productDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const { error } = await context.supabase
       .from("products")
       .delete()
@@ -99,7 +100,7 @@ export const productToggle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string; field: "active" | "featured" | "is_new" | "is_bestseller" | "is_offer"; value: boolean }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const patch: Record<string, boolean> = { [data.field]: data.value };
     const { error } = await context.supabase.from("products").update(patch as never).eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
@@ -110,7 +111,7 @@ export const productDuplicate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const { data: src, error } = await context.supabase
       .from("products")
       .select("*")
