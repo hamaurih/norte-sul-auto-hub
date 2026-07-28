@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/session";
 import { brl } from "@/lib/format";
+import { cancelOrder } from "@/lib/order.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos")({
   head: () => ({ meta: [{ title: "Meus pedidos · Norte Sul" }] }),
@@ -11,6 +13,15 @@ export const Route = createFileRoute("/_authenticated/pedidos")({
 
 function Pedidos() {
   const { user } = useSession();
+  const queryClient = useQueryClient();
+  const cancelMutation = useMutation({
+    mutationFn: (orderId: string) => cancelOrder({ data: { orderId } }),
+    onSuccess: async () => {
+      toast.success("Pedido cancelado e estoque liberado.");
+      await queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders", user?.id],
     enabled: !!user,
@@ -50,6 +61,16 @@ function Pedidos() {
                   <li key={k}>{i.quantity}× {i.name} <span className="opacity-60">({i.sku})</span></li>
                 ))}
               </ul>
+              {o.status === "aguardando_pagamento" && (
+                <button
+                  type="button"
+                  disabled={cancelMutation.isPending}
+                  onClick={() => cancelMutation.mutate(o.id)}
+                  className="mt-3 rounded-md border border-destructive px-3 py-1.5 text-xs font-semibold text-destructive disabled:opacity-50"
+                >
+                  Cancelar pedido
+                </button>
+              )}
               {o.bling_number && <div className="mt-2 text-xs">Bling: <b>{o.bling_number}</b></div>}
             </div>
           ))}
