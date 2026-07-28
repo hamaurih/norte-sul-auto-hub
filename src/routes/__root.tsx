@@ -16,10 +16,12 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { TenantEnvironmentSwitcher } from "@/components/admin/TenantEnvironmentSwitcher";
+import { CompanyTheme } from "@/components/site/CompanyTheme";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <CompanyTheme />
+      <div className="flex min-h-screen flex-col">
       <Header />
       <div className="flex flex-1 items-center justify-center bg-background px-4 py-20">
         <div className="max-w-md text-center">
