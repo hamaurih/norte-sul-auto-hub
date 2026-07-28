@@ -2574,6 +2574,122 @@ export type Database = {
           },
         ]
       }
+      tenant_company_profiles: {
+        Row: {
+          accent_color: string
+          address_city: string | null
+          address_complement: string | null
+          address_neighborhood: string | null
+          address_number: string | null
+          address_state: string | null
+          address_street: string | null
+          address_zip: string | null
+          business_hours: string | null
+          country_code: string
+          email: string | null
+          facebook_url: string | null
+          favicon_url: string | null
+          footer_text: string | null
+          instagram_url: string | null
+          legal_name: string | null
+          logo_dark_url: string | null
+          logo_url: string | null
+          municipal_registration: string | null
+          phone: string | null
+          primary_color: string
+          secondary_color: string
+          state_registration: string | null
+          store_description: string | null
+          store_title: string | null
+          tax_id: string | null
+          tenant_id: string
+          trade_name: string
+          updated_at: string
+          updated_by: string | null
+          website: string | null
+          whatsapp: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          accent_color?: string
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          business_hours?: string | null
+          country_code?: string
+          email?: string | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_text?: string | null
+          instagram_url?: string | null
+          legal_name?: string | null
+          logo_dark_url?: string | null
+          logo_url?: string | null
+          municipal_registration?: string | null
+          phone?: string | null
+          primary_color?: string
+          secondary_color?: string
+          state_registration?: string | null
+          store_description?: string | null
+          store_title?: string | null
+          tax_id?: string | null
+          tenant_id: string
+          trade_name: string
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          accent_color?: string
+          address_city?: string | null
+          address_complement?: string | null
+          address_neighborhood?: string | null
+          address_number?: string | null
+          address_state?: string | null
+          address_street?: string | null
+          address_zip?: string | null
+          business_hours?: string | null
+          country_code?: string
+          email?: string | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_text?: string | null
+          instagram_url?: string | null
+          legal_name?: string | null
+          logo_dark_url?: string | null
+          logo_url?: string | null
+          municipal_registration?: string | null
+          phone?: string | null
+          primary_color?: string
+          secondary_color?: string
+          state_registration?: string | null
+          store_description?: string | null
+          store_title?: string | null
+          tax_id?: string | null
+          tenant_id?: string
+          trade_name?: string
+          updated_at?: string
+          updated_by?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_company_profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_memberships: {
         Row: {
           active: boolean
