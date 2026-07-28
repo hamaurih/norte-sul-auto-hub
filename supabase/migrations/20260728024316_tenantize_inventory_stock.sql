@@ -139,6 +139,20 @@ create policy product_stock_storefront_read
 on public.product_stock for select to anon
 using (tenant_id = (select private.requested_storefront_tenant_id()));
 
+create policy branches_storefront_read
+on public.branches for select to anon
+using (
+  active
+  and tenant_id = (select private.requested_storefront_tenant_id())
+);
+
+create policy warehouses_storefront_read
+on public.warehouses for select to anon
+using (
+  active
+  and tenant_id = (select private.requested_storefront_tenant_id())
+);
+
 create policy product_stock_member_read
 on public.product_stock for select to authenticated
 using ((select private.has_tenant_role(tenant_id, null)));
@@ -254,6 +268,10 @@ revoke all on table public.stock_transfer_items from anon, authenticated;
 revoke all on table public.v_product_stock_available from anon, authenticated;
 
 grant select on table public.product_stock to anon;
+grant select (id, tenant_id, name, code, active)
+  on table public.branches to anon;
+grant select (id, tenant_id, branch_id, name, code, active)
+  on table public.warehouses to anon;
 grant select, insert, update, delete
   on table public.product_stock to authenticated;
 grant select, insert
