@@ -7,7 +7,8 @@ import { fetchCategories, fetchSearchSuggestions } from "@/lib/queries";
 import { useCart } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
 import { brl } from "@/lib/format";
-import logo from "@/assets/norte-sul-logo.png.asset.json";
+import { CompanyLogo } from "@/components/site/CompanyLogo";
+import { useCompanyProfile } from "@/lib/company";
 
 export function Header() {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const { count } = useCart();
+  const { data: company } = useCompanyProfile();
+  const whatsappHref = company?.whatsapp
+    ? `https://wa.me/${company.whatsapp.replace(/\D/g, "")}`
+    : "#";
   const { user, isStaff, isSalesRep, isB2BApproved } = useSession();
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
 
@@ -85,7 +90,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <Link to="/b2b" className="hover:text-primary">Compre no Atacado (B2B)</Link>
             <span className="opacity-40">|</span>
-            <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="hover:text-primary">WhatsApp</a>
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="hover:text-primary">WhatsApp</a>
           </div>
         </div>
       </div>
@@ -100,14 +105,8 @@ export function Header() {
           <Menu className="h-6 w-6" />
         </button>
 
-        <Link to="/" className="group flex items-center" aria-label="Norte Sul Acessórios - Início">
-          <img
-            src={logo.url}
-            alt="Norte Sul Acessórios e Peças"
-            className="h-14 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105 md:h-16"
-            loading="eager"
-            decoding="async"
-          />
+        <Link to="/" className="group flex items-center" aria-label={`${company?.trade_name || "Loja"} - Início`}>
+          <CompanyLogo className="h-14 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105 md:h-16" />
         </Link>
 
         <div ref={boxRef} className="relative ml-auto flex flex-1 max-w-2xl">
