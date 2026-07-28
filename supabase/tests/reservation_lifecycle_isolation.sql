@@ -40,6 +40,8 @@ join public.tenants tenant on tenant.id = branch.tenant_id
 where branch.code = 'FIL-CICLO'
   and tenant.environment = 'demo';
 
+set local role service_role;
+
 do $test$
 declare
   real_product uuid;
@@ -161,6 +163,8 @@ begin
   end if;
 end;
 $test$;
+
+reset role;
 
 do $test$
 begin
