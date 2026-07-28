@@ -124,7 +124,7 @@ alter table public.categories drop constraint categories_slug_key;
 alter table public.categories add constraint categories_tenant_slug_key unique (tenant_id, slug);
 alter table public.categories drop constraint categories_parent_id_fkey;
 alter table public.categories add constraint categories_parent_tenant_fkey
-  foreign key (parent_id, tenant_id) references public.categories(id, tenant_id) on delete set null;
+  foreign key (parent_id, tenant_id) references public.categories(id, tenant_id) on delete restrict;
 
 alter table public.products drop constraint products_sku_key;
 alter table public.products drop constraint products_slug_key;
@@ -133,13 +133,13 @@ alter table public.products add constraint products_tenant_slug_key unique (tena
 
 alter table public.products drop constraint products_brand_id_fkey;
 alter table public.products add constraint products_brand_tenant_fkey
-  foreign key (brand_id, tenant_id) references public.brands(id, tenant_id) on delete set null;
+  foreign key (brand_id, tenant_id) references public.brands(id, tenant_id) on delete restrict;
 alter table public.products drop constraint products_category_id_fkey;
 alter table public.products add constraint products_category_tenant_fkey
-  foreign key (category_id, tenant_id) references public.categories(id, tenant_id) on delete set null;
+  foreign key (category_id, tenant_id) references public.categories(id, tenant_id) on delete restrict;
 alter table public.products drop constraint products_subcategory_id_fkey;
 alter table public.products add constraint products_subcategory_tenant_fkey
-  foreign key (subcategory_id, tenant_id) references public.categories(id, tenant_id) on delete set null;
+  foreign key (subcategory_id, tenant_id) references public.categories(id, tenant_id) on delete restrict;
 
 alter table public.product_images drop constraint product_images_product_id_fkey;
 alter table public.product_images add constraint product_images_product_tenant_fkey
