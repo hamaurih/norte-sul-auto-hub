@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function requireCatalogTenant(supabase: any, userId: string) {
+async function requireCatalogTenant(supabase: any, userId: string, tenantId: string) {
   const { data, error } = await supabase
     .from("tenant_memberships")
     .select("tenant_id, role")
@@ -51,7 +51,7 @@ export const productUpsert = createServerFn({ method: "POST" })
   .inputValidator((input: ProductInput) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const membership = await requireCatalogTenant(supabase, userId);
+    const membership = await requireCatalogTenant(supabase, userId, context.tenantId);
     const { images, id, ...row } = data;
     const payload = { ...row, tenant_id: membership.tenant_id, updated_at: new Date().toISOString() };
     let productId = id;
