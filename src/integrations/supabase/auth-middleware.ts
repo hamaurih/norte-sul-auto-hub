@@ -53,6 +53,16 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     }
 
     const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    const cookieTenant = cookieHeader
+      .split(';')
+      .map((item) => item.trim())
+      .find((item) => item.startsWith('auto_deal_tenant_slug='))
+      ?.split('=')[1];
+    const tenantSlug = request.headers.get('x-tenant-slug')
+      ?? cookieTenant
+      ?? process.env.PUBLIC_TENANT_SLUG
+      ?? 'norte-sul-real';
 
     if (!authHeader) {
       throw new Error('Unauthorized: No authorization header provided');
@@ -79,6 +89,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
           fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY!),
           headers: {
             Authorization: `Bearer ${token}`,
+            'x-tenant-slug': tenantSlug,
           },
         },
         auth: {
@@ -98,11 +109,23 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No user ID found in token');
     }
 
+    const { data: storefront, error: storefrontError } = await supabase
+      .from('tenant_storefronts')
+      .select('tenant_id, slug')
+      .eq('slug', tenantSlug)
+      .eq('active', true)
+      .maybeSingle();
+    if (storefrontError || !storefront) {
+      throw new Error('Tenant context is invalid or inactive');
+    }
+
     return next({
       context: {
         supabase,
         userId: data.claims.sub,
         claims: data.claims,
+        tenantId: storefront.tenant_id,
+        tenantSlug: storefront.slug,
       },
     });
   },
