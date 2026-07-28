@@ -2601,14 +2601,20 @@ export type Database = {
       }
     }
     Functions: {
-      create_storefront_order: {
+      internal_create_storefront_order: {
         Args: {
           p_customer: Json
           p_idempotency_key: string
           p_items: Json
           p_payment_method: string
+          p_tenant_slug: string
+          p_user_id: string
         }
         Returns: string
+      }
+      internal_transition_order: {
+        Args: { p_action: string; p_actor_user_id?: string; p_order_id: string }
+        Returns: Database["public"]["Enums"]["order_status"]
       }
     }
     Enums: {
