@@ -6,6 +6,11 @@ function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
 
+function publicTenantSlug(): string {
+  const serverValue = typeof process !== 'undefined' ? process.env.PUBLIC_TENANT_SLUG : undefined;
+  return import.meta.env.VITE_PUBLIC_TENANT_SLUG || serverValue || 'norte-sul-real';
+}
+
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
   return (input, init) => {
     const headers = new Headers(
@@ -22,6 +27,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
     }
 
     headers.set('apikey', supabaseKey);
+    if (!headers.has('x-tenant-slug')) headers.set('x-tenant-slug', publicTenantSlug());
     return fetch(input, { ...init, headers });
   };
 }
