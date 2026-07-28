@@ -109,6 +109,10 @@ create table private.payment_webhook_events (
 
 create index payment_webhook_events_processing_idx
   on private.payment_webhook_events (processing_status, received_at);
+create index payment_provider_secrets_provider_tenant_idx
+  on private.payment_provider_secrets (provider_id, tenant_id);
+create index payment_webhook_events_provider_tenant_idx
+  on private.payment_webhook_events (provider_id, tenant_id);
 
 create table public.payment_refunds (
   id uuid primary key default gen_random_uuid(),
@@ -134,6 +138,14 @@ create table public.payment_refunds (
 
 create index payment_refunds_intent_idx
   on public.payment_refunds (tenant_id, payment_intent_id, created_at desc);
+create index payment_intents_order_tenant_fk_idx
+  on public.payment_intents (order_id, tenant_id);
+create index payment_intents_provider_tenant_fk_idx
+  on public.payment_intents (provider_id, tenant_id);
+create index payment_refunds_intent_tenant_fk_idx
+  on public.payment_refunds (payment_intent_id, tenant_id);
+create index payment_refunds_requested_by_idx
+  on public.payment_refunds (requested_by);
 
 alter table public.payment_providers enable row level security;
 alter table public.payment_intents enable row level security;
@@ -183,6 +195,16 @@ using (
     array['owner', 'admin', 'manager', 'finance']::text[]
   )
 );
+
+create policy payment_provider_secrets_deny_client_access
+on private.payment_provider_secrets for all to authenticated
+using (false)
+with check (false);
+
+create policy payment_webhook_events_deny_client_access
+on private.payment_webhook_events for all to authenticated
+using (false)
+with check (false);
 
 create or replace function private.create_payment_intent(
   p_order_id uuid,
