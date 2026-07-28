@@ -1230,6 +1230,231 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_intents: {
+        Row: {
+          amount: number
+          authorized_at: string | null
+          boleto_barcode: string | null
+          boleto_url: string | null
+          cancelled_at: string | null
+          checkout_url: string | null
+          client_reference: string | null
+          created_at: string
+          currency: string
+          expires_at: string | null
+          external_id: string | null
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          idempotency_key: string
+          method: string
+          order_id: string
+          paid_at: string | null
+          pix_copy_paste: string | null
+          pix_qr_code_url: string | null
+          provider_id: string
+          provider_metadata: Json
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          authorized_at?: string | null
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          client_reference?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          external_id?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key: string
+          method: string
+          order_id: string
+          paid_at?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code_url?: string | null
+          provider_id: string
+          provider_metadata?: Json
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          authorized_at?: string | null
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          client_reference?: string | null
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          external_id?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          id?: string
+          idempotency_key?: string
+          method?: string
+          order_id?: string
+          paid_at?: string | null
+          pix_copy_paste?: string | null
+          pix_qr_code_url?: string | null
+          provider_id?: string
+          provider_metadata?: Json
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_order_tenant_fkey"
+            columns: ["order_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "payment_intents_provider_tenant_fkey"
+            columns: ["provider_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "payment_providers"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "payment_intents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_providers: {
+        Row: {
+          active: boolean
+          adapter_key: string
+          capabilities: Json
+          code: string
+          created_at: string
+          display_name: string
+          environment: string
+          id: string
+          priority: number
+          supported_methods: string[]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          adapter_key: string
+          capabilities?: Json
+          code: string
+          created_at?: string
+          display_name: string
+          environment: string
+          id?: string
+          priority?: number
+          supported_methods?: string[]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          adapter_key?: string
+          capabilities?: Json
+          code?: string
+          created_at?: string
+          display_name?: string
+          environment?: string
+          id?: string
+          priority?: number
+          supported_methods?: string[]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_providers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          external_id: string | null
+          id: string
+          idempotency_key: string
+          payment_intent_id: string
+          processed_at: string | null
+          provider_metadata: Json
+          reason: string
+          requested_by: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          idempotency_key: string
+          payment_intent_id: string
+          processed_at?: string | null
+          provider_metadata?: Json
+          reason: string
+          requested_by?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          idempotency_key?: string
+          payment_intent_id?: string
+          processed_at?: string | null
+          provider_metadata?: Json
+          reason?: string
+          requested_by?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_refunds_intent_tenant_fkey"
+            columns: ["payment_intent_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "payment_intents"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "payment_refunds_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_applications: {
         Row: {
           id: string
@@ -2601,6 +2826,60 @@ export type Database = {
       }
     }
     Functions: {
+      internal_apply_payment_webhook: {
+        Args: {
+          p_event_type: string
+          p_external_payment_id: string
+          p_normalized_status: string
+          p_payload_sha256: string
+          p_provider_event_id: string
+          p_provider_id: string
+          p_signature_verified: boolean
+        }
+        Returns: string
+      }
+      internal_create_payment_intent: {
+        Args: {
+          p_actor_user_id: string
+          p_idempotency_key: string
+          p_order_id: string
+          p_provider_code?: string
+        }
+        Returns: {
+          amount: number
+          authorized_at: string | null
+          boleto_barcode: string | null
+          boleto_url: string | null
+          cancelled_at: string | null
+          checkout_url: string | null
+          client_reference: string | null
+          created_at: string
+          currency: string
+          expires_at: string | null
+          external_id: string | null
+          failure_code: string | null
+          failure_message: string | null
+          id: string
+          idempotency_key: string
+          method: string
+          order_id: string
+          paid_at: string | null
+          pix_copy_paste: string | null
+          pix_qr_code_url: string | null
+          provider_id: string
+          provider_metadata: Json
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_intents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       internal_create_storefront_order: {
         Args: {
           p_customer: Json
