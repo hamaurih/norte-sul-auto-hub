@@ -51,7 +51,7 @@ function CompanySettings() {
   });
 
   const set = (field: keyof CompanyProfileInput, value: string) =>
-    setForm((current) => ({ ...current, [field]: value || null }));
+    setForm((current) => ({ ...current, [field]: value || null }) as CompanyProfileInput);
 
   async function uploadLogo(file: File, field: "logo_url" | "logo_dark_url" | "favicon_url") {
     if (!data?.tenant_id) return;
@@ -173,6 +173,6 @@ function Color({ label, value, onChange }: { label: string; value: string; onCha
 function Upload({ label, url, disabled, onFile }: { label: string; url: string | null; disabled: boolean; onFile: (file: File) => void }) {
   return <Field label={label}><div className="flex items-center gap-3 rounded-md border border-dashed p-3">
     {url ? <img src={url} alt="" className="h-14 w-24 object-contain" /> : <div className="grid h-14 w-24 place-items-center bg-muted text-xs">Sem imagem</div>}
-    <input disabled={disabled} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} className="min-w-0 text-xs" />
+    <input disabled={disabled} type="file" accept="image/png,image/jpeg,image/webp,image/x-icon" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} className="min-w-0 text-xs" />
   </div></Field>;
 }
