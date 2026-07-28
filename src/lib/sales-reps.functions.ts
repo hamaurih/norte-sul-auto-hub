@@ -4,12 +4,14 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { tdb } from "@/integrations/supabase/tenant-db";
 
 export const inviteSalesRep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { full_name: string; email: string; phone?: string; commission_pct?: number; notes?: string }) => input)
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase: rawSupabase, userId } = context;
+    const supabase = tdb(rawSupabase);
 
     const { data: memberships, error: membershipError } = await supabase
       .from("tenant_memberships")
@@ -18,12 +20,13 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
       .eq("tenant_id", context.tenantId)
       .eq("active", true);
     if (membershipError) throw new Error(membershipError.message);
-    const membership = (memberships ?? []).find((item) =>
+    const membership = (memberships ?? []).find((item: { role: string }) =>
       ["owner", "admin", "manager"].includes(item.role),
     );
     if (!membership) throw new Error("Usuário sem permissão para convidar vendedor");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: rawSupabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = tdb(rawSupabaseAdmin);
 
     // Send invite email (creates auth user if new)
     const redirectTo = process.env.SITE_URL ? `${process.env.SITE_URL}/auth` : undefined;
@@ -37,7 +40,7 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
     let newUserId = invited?.user?.id ?? null;
     if (!newUserId) {
       const { data: existing } = await supabaseAdmin.auth.admin.listUsers();
-      newUserId = existing?.users.find((u) => u.email?.toLowerCase() === data.email.toLowerCase())?.id ?? null;
+      newUserId = existing?.users.find((u: { email?: string }) => u.email?.toLowerCase() === data.email.toLowerCase())?.id ?? null;
     }
     if (!newUserId) throw new Error("Não foi possível criar o usuário");
 

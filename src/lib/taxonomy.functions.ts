@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
+import { tdb } from "@/integrations/supabase/tenant-db";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { slugify } from "@/lib/format";
 
-async function requireCatalogTenant(supabase: any, userId: string) {
+async function requireCatalogTenant(supabase: any, userId: string, tenantId: string) {
   const { data, error } = await supabase
     .from("tenant_memberships")
     .select("tenant_id, role")
@@ -30,7 +31,7 @@ export const brandUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: BrandInput) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
@@ -42,11 +43,11 @@ export const brandUpsert = createServerFn({ method: "POST" })
       featured: data.featured ?? false,
     };
     if (data.id) {
-      const { error } = await context.supabase.from("brands").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
+      const { error } = await tdb(context.supabase).from("brands").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: ins, error } = await context.supabase.from("brands").insert(row).select("id").single();
+    const { data: ins, error } = await tdb(context.supabase).from("brands").insert(row).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id };
   });
@@ -55,14 +56,14 @@ export const brandDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
-    const { count } = await context.supabase
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
+    const { count } = await tdb(context.supabase)
       .from("products")
       .select("id", { count: "exact", head: true })
       .eq("brand_id", data.id)
       .eq("tenant_id", membership.tenant_id);
     if ((count ?? 0) > 0) throw new Error(`Marca em uso por ${count} produto(s). Reatribua antes de excluir.`);
-    const { error } = await context.supabase.from("brands").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
+    const { error } = await tdb(context.supabase).from("brands").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -83,7 +84,7 @@ export const categoryUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CategoryInput) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
@@ -99,11 +100,11 @@ export const categoryUpsert = createServerFn({ method: "POST" })
     };
     if (data.id) {
       if (row.parent_id === data.id) throw new Error("Categoria não pode ser pai dela mesma");
-      const { error } = await context.supabase.from("categories").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
+      const { error } = await tdb(context.supabase).from("categories").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
-    const { data: ins, error } = await context.supabase.from("categories").insert(row).select("id").single();
+    const { data: ins, error } = await tdb(context.supabase).from("categories").insert(row).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id };
   });
@@ -112,14 +113,14 @@ export const categoryDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const membership = await requireCatalogTenant(tdb(context.supabase), context.userId, context.tenantId);
     const [{ count: prodCount }, { count: childCount }] = await Promise.all([
-      context.supabase.from("products").select("id", { count: "exact", head: true }).or(`category_id.eq.${data.id},subcategory_id.eq.${data.id}`).eq("tenant_id", membership.tenant_id),
-      context.supabase.from("categories").select("id", { count: "exact", head: true }).eq("parent_id", data.id).eq("tenant_id", membership.tenant_id),
+      tdb(context.supabase).from("products").select("id", { count: "exact", head: true }).or(`category_id.eq.${data.id},subcategory_id.eq.${data.id}`).eq("tenant_id", membership.tenant_id),
+      tdb(context.supabase).from("categories").select("id", { count: "exact", head: true }).eq("parent_id", data.id).eq("tenant_id", membership.tenant_id),
     ]);
     if ((prodCount ?? 0) > 0) throw new Error(`Categoria em uso por ${prodCount} produto(s).`);
     if ((childCount ?? 0) > 0) throw new Error(`Categoria possui ${childCount} subcategoria(s). Exclua-as primeiro.`);
-    const { error } = await context.supabase.from("categories").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
+    const { error } = await tdb(context.supabase).from("categories").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

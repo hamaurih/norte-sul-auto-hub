@@ -16,6 +16,7 @@ import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as CarrinhoRouteImport } from './routes/carrinho'
 import { Route as B2bRouteImport } from './routes/b2b'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AtivacaoRouteImport } from './routes/ativacao'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminOrcamentosRouteImport } from './routes/_authenticated/admin.orcamentos'
 import { Route as AuthenticatedAdminMarcasRouteImport } from './routes/_authenticated/admin.marcas'
 import { Route as AuthenticatedAdminIaAesBusinessRouteImport } from './routes/_authenticated/admin.ia-aes-business'
+import { Route as AuthenticatedAdminHomologacaoRouteImport } from './routes/_authenticated/admin.homologacao'
 import { Route as AuthenticatedAdminFiliaisRouteImport } from './routes/_authenticated/admin.filiais'
 import { Route as AuthenticatedAdminEstoqueRouteImport } from './routes/_authenticated/admin.estoque'
 import { Route as AuthenticatedAdminEcossistemaRouteImport } from './routes/_authenticated/admin.ecossistema'
@@ -92,6 +94,11 @@ const B2bRoute = B2bRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtivacaoRoute = AtivacaoRouteImport.update({
+  id: '/ativacao',
+  path: '/ativacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -209,6 +216,12 @@ const AuthenticatedAdminIaAesBusinessRoute =
   AuthenticatedAdminIaAesBusinessRouteImport.update({
     id: '/ia-aes-business',
     path: '/ia-aes-business',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminHomologacaoRoute =
+  AuthenticatedAdminHomologacaoRouteImport.update({
+    id: '/homologacao',
+    path: '/homologacao',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminFiliaisRoute =
@@ -338,6 +351,7 @@ const AuthenticatedAdminEcossistemaSlugRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ativacao': typeof AtivacaoRoute
   '/auth': typeof AuthRoute
   '/b2b': typeof B2bRoute
   '/carrinho': typeof CarrinhoRoute
@@ -364,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
   '/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
   '/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
+  '/admin/homologacao': typeof AuthenticatedAdminHomologacaoRoute
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
@@ -388,6 +403,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ativacao': typeof AtivacaoRoute
   '/auth': typeof AuthRoute
   '/b2b': typeof B2bRoute
   '/carrinho': typeof CarrinhoRoute
@@ -411,6 +427,7 @@ export interface FileRoutesByTo {
   '/admin/cupons': typeof AuthenticatedAdminCuponsRoute
   '/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
   '/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
+  '/admin/homologacao': typeof AuthenticatedAdminHomologacaoRoute
   '/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
@@ -437,6 +454,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/ativacao': typeof AtivacaoRoute
   '/auth': typeof AuthRoute
   '/b2b': typeof B2bRoute
   '/carrinho': typeof CarrinhoRoute
@@ -463,6 +481,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ecossistema': typeof AuthenticatedAdminEcossistemaRouteWithChildren
   '/_authenticated/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
   '/_authenticated/admin/filiais': typeof AuthenticatedAdminFiliaisRoute
+  '/_authenticated/admin/homologacao': typeof AuthenticatedAdminHomologacaoRoute
   '/_authenticated/admin/ia-aes-business': typeof AuthenticatedAdminIaAesBusinessRoute
   '/_authenticated/admin/marcas': typeof AuthenticatedAdminMarcasRoute
   '/_authenticated/admin/orcamentos': typeof AuthenticatedAdminOrcamentosRoute
@@ -489,6 +508,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ativacao'
     | '/auth'
     | '/b2b'
     | '/carrinho'
@@ -515,6 +535,7 @@ export interface FileRouteTypes {
     | '/admin/ecossistema'
     | '/admin/estoque'
     | '/admin/filiais'
+    | '/admin/homologacao'
     | '/admin/ia-aes-business'
     | '/admin/marcas'
     | '/admin/orcamentos'
@@ -539,6 +560,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ativacao'
     | '/auth'
     | '/b2b'
     | '/carrinho'
@@ -562,6 +584,7 @@ export interface FileRouteTypes {
     | '/admin/cupons'
     | '/admin/estoque'
     | '/admin/filiais'
+    | '/admin/homologacao'
     | '/admin/ia-aes-business'
     | '/admin/marcas'
     | '/admin/orcamentos'
@@ -587,6 +610,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/ativacao'
     | '/auth'
     | '/b2b'
     | '/carrinho'
@@ -613,6 +637,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ecossistema'
     | '/_authenticated/admin/estoque'
     | '/_authenticated/admin/filiais'
+    | '/_authenticated/admin/homologacao'
     | '/_authenticated/admin/ia-aes-business'
     | '/_authenticated/admin/marcas'
     | '/_authenticated/admin/orcamentos'
@@ -639,6 +664,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AtivacaoRoute: typeof AtivacaoRoute
   AuthRoute: typeof AuthRoute
   B2bRoute: typeof B2bRoute
   CarrinhoRoute: typeof CarrinhoRoute
@@ -702,6 +728,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ativacao': {
+      id: '/ativacao'
+      path: '/ativacao'
+      fullPath: '/ativacao'
+      preLoaderRoute: typeof AtivacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -849,6 +882,13 @@ declare module '@tanstack/react-router' {
       path: '/ia-aes-business'
       fullPath: '/admin/ia-aes-business'
       preLoaderRoute: typeof AuthenticatedAdminIaAesBusinessRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/homologacao': {
+      id: '/_authenticated/admin/homologacao'
+      path: '/homologacao'
+      fullPath: '/admin/homologacao'
+      preLoaderRoute: typeof AuthenticatedAdminHomologacaoRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/filiais': {
@@ -1064,6 +1104,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEcossistemaRoute: typeof AuthenticatedAdminEcossistemaRouteWithChildren
   AuthenticatedAdminEstoqueRoute: typeof AuthenticatedAdminEstoqueRoute
   AuthenticatedAdminFiliaisRoute: typeof AuthenticatedAdminFiliaisRoute
+  AuthenticatedAdminHomologacaoRoute: typeof AuthenticatedAdminHomologacaoRoute
   AuthenticatedAdminIaAesBusinessRoute: typeof AuthenticatedAdminIaAesBusinessRoute
   AuthenticatedAdminMarcasRoute: typeof AuthenticatedAdminMarcasRoute
   AuthenticatedAdminOrcamentosRoute: typeof AuthenticatedAdminOrcamentosRoute
@@ -1090,6 +1131,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
     AuthenticatedAdminEcossistemaRouteWithChildren,
   AuthenticatedAdminEstoqueRoute: AuthenticatedAdminEstoqueRoute,
   AuthenticatedAdminFiliaisRoute: AuthenticatedAdminFiliaisRoute,
+  AuthenticatedAdminHomologacaoRoute: AuthenticatedAdminHomologacaoRoute,
   AuthenticatedAdminIaAesBusinessRoute: AuthenticatedAdminIaAesBusinessRoute,
   AuthenticatedAdminMarcasRoute: AuthenticatedAdminMarcasRoute,
   AuthenticatedAdminOrcamentosRoute: AuthenticatedAdminOrcamentosRoute,
@@ -1148,6 +1190,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AtivacaoRoute: AtivacaoRoute,
   AuthRoute: AuthRoute,
   B2bRoute: B2bRoute,
   CarrinhoRoute: CarrinhoRoute,

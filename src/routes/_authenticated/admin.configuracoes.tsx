@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building2, Image, MapPin, Palette, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAccessContext } from "@/lib/access";
 import { useCompanyProfile, type CompanyProfile } from "@/lib/company";
 import { saveCompanyProfile, type CompanyProfileInput } from "@/lib/company.functions";
 
@@ -12,6 +13,10 @@ export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
   beforeLoad: async () => {
     const { data: userRes } = await supabase.auth.getUser();
     if (!userRes.user) throw redirect({ to: "/auth" });
+    const context = await fetchAccessContext();
+    if (context.organizations.length === 0 && context.tenants.length === 0) {
+      throw redirect({ to: "/ativacao" });
+    }
   },
   component: CompanySettings,
 });

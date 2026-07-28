@@ -109,7 +109,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No user ID found in token');
     }
 
-    const { data: storefront, error: storefrontError } = await supabase
+    const { data: storefront, error: storefrontError } = await (supabase as unknown as import("@supabase/supabase-js").SupabaseClient<any, "public", any>)
       .from('tenant_storefronts')
       .select('tenant_id, slug')
       .eq('slug', tenantSlug)

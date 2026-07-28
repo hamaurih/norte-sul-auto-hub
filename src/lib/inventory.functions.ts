@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { tdb } from "@/integrations/supabase/tenant-db";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function requireTenantRole(
@@ -25,12 +26,12 @@ export const listBranches = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
-    const { data, error } = await context.supabase
+    const { data, error } = await tdb(context.supabase)
       .from("branches")
       .select("*, warehouses(id, name, code, is_default, active, tenant_id)")
       .eq("tenant_id", membership.tenant_id)
@@ -48,17 +49,17 @@ export const upsertBranch = createServerFn({ method: "POST" })
     email?: string | null; is_main?: boolean; active?: boolean;
   }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantRole(context.supabase, context.userId, context.tenantId);
+    const membership = await requireTenantRole(tdb(context.supabase), context.userId, context.tenantId);
     const { id, ...row } = data;
     if (id) {
-      const { error } = await context.supabase.from("branches").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
+      const { error } = await tdb(context.supabase).from("branches").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: ins, error } = await context.supabase.from("branches").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
+    const { data: ins, error } = await tdb(context.supabase).from("branches").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
     if (error) throw new Error(error.message);
     // Criar depósito padrão automático
-    await context.supabase.from("warehouses").insert({
+    await tdb(context.supabase).from("warehouses").insert({
       tenant_id: membership.tenant_id,
       branch_id: ins.id,
       name: "Depósito Principal",
@@ -74,18 +75,18 @@ export const upsertWarehouse = createServerFn({ method: "POST" })
   .inputValidator((input: { id?: string; branch_id: string; name: string; code: string; is_default?: boolean; active?: boolean }) => input)
   .handler(async ({ data, context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock"],
     );
     const { id, ...row } = data;
     if (id) {
-      const { error } = await context.supabase.from("warehouses").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
+      const { error } = await tdb(context.supabase).from("warehouses").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id };
     }
-    const { data: ins, error } = await context.supabase.from("warehouses").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
+    const { data: ins, error } = await tdb(context.supabase).from("warehouses").insert({ ...row, tenant_id: membership.tenant_id }).select("id").single();
     if (error) throw new Error(error.message);
     return { ok: true, id: ins.id };
   });
@@ -96,12 +97,12 @@ export const listStockByProduct = createServerFn({ method: "GET" })
   .inputValidator((input: { productId: string }) => input)
   .handler(async ({ data, context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
-    const { data: rows, error } = await context.supabase
+    const { data: rows, error } = await tdb(context.supabase)
       .from("product_stock")
       .select("id, warehouse_id, on_hand, reserved, min_stock, warehouse:warehouses(name, code, branch:branches(name, code))")
       .eq("tenant_id", membership.tenant_id)
@@ -119,12 +120,12 @@ export const adjustStock = createServerFn({ method: "POST" })
   }) => input)
   .handler(async ({ data, context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock"],
     );
-    const sb = context.supabase;
+    const sb = tdb(context.supabase);
     // upsert product_stock row
     const { data: existing } = await sb
       .from("product_stock")
@@ -164,12 +165,12 @@ export const listMovements = createServerFn({ method: "GET" })
   .inputValidator((input: { warehouseId?: string; limit?: number }) => input)
   .handler(async ({ data, context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
-    let q = context.supabase
+    let q = tdb(context.supabase)
       .from("stock_movements")
       .select("id, type, qty, reference, notes, created_at, product:products(sku, name), warehouse:warehouses(name, code)")
       .eq("tenant_id", membership.tenant_id)
@@ -185,12 +186,12 @@ export const stockOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const membership = await requireTenantRole(
-      context.supabase,
+      tdb(context.supabase),
       context.userId,
       context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
-    const sb = context.supabase;
+    const sb = tdb(context.supabase);
     const { data: branches } = await sb.from("branches").select("id, name, code, is_main").eq("tenant_id", membership.tenant_id).eq("active", true);
     const results: { branch: any; total_on_hand: number; total_reserved: number; skus: number }[] = [];
     for (const b of branches ?? []) {

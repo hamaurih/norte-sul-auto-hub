@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { tdb } from "@/integrations/supabase/tenant-db";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { CompanyProfile } from "./company";
 
@@ -8,7 +9,8 @@ export const saveCompanyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CompanyProfileInput) => input)
   .handler(async ({ data, context }) => {
-    const { supabase, tenantId, userId } = context;
+    const { supabase: rawSupabase, tenantId, userId } = context;
+    const supabase = tdb(rawSupabase);
     const { data: membership, error: membershipError } = await supabase
       .from("tenant_memberships")
       .select("role")
