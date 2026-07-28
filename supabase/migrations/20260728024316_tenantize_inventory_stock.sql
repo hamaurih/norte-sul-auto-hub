@@ -108,12 +108,16 @@ create index idx_stock_movements_product_tenant
   on public.stock_movements (product_id, tenant_id);
 create index idx_stock_movements_warehouse_tenant
   on public.stock_movements (warehouse_id, tenant_id);
+create index idx_stock_movements_user
+  on public.stock_movements (user_id) where user_id is not null;
 create index idx_stock_transfers_tenant_created
   on public.stock_transfers (tenant_id, created_at desc);
 create index idx_stock_transfers_source_tenant
   on public.stock_transfers (from_warehouse_id, tenant_id);
 create index idx_stock_transfers_destination_tenant
   on public.stock_transfers (to_warehouse_id, tenant_id);
+create index idx_stock_transfers_created_by
+  on public.stock_transfers (created_by) where created_by is not null;
 create index idx_stock_transfer_items_transfer_tenant
   on public.stock_transfer_items (transfer_id, tenant_id);
 create index idx_stock_transfer_items_product_tenant
