@@ -7,6 +7,7 @@ async function requireCatalogTenant(supabase: any, userId: string) {
     .from("tenant_memberships")
     .select("tenant_id, role")
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("active", true);
   if (error) throw new Error(error.message);
   const membership = (data ?? []).find((item: { role: string }) =>
@@ -29,7 +30,7 @@ export const brandUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: BrandInput) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
@@ -54,7 +55,7 @@ export const brandDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const { count } = await context.supabase
       .from("products")
       .select("id", { count: "exact", head: true })
@@ -82,7 +83,7 @@ export const categoryUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CategoryInput) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
@@ -111,7 +112,7 @@ export const categoryDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireCatalogTenant(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const [{ count: prodCount }, { count: childCount }] = await Promise.all([
       context.supabase.from("products").select("id", { count: "exact", head: true }).or(`category_id.eq.${data.id},subcategory_id.eq.${data.id}`).eq("tenant_id", membership.tenant_id),
       context.supabase.from("categories").select("id", { count: "exact", head: true }).eq("parent_id", data.id).eq("tenant_id", membership.tenant_id),
