@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
     if (!userRes.user) throw redirect({ to: "/auth" });
     const context = await fetchAccessContext();
     if (context.organizations.length === 0 && context.tenants.length === 0) {
-      throw redirect({ to: "/ativacao" });
+      if (!(await isLegacyStaff(userRes.user.id))) throw redirect({ to: "/ativacao" });
     }
   },
   component: CompanySettings,
