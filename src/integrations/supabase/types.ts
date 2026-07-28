@@ -1183,6 +1183,13 @@ export type Database = {
             referencedColumns: ["id", "tenant_id"]
           },
           {
+            foreignKeyName: "product_applications_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id", "tenant_id"]
+          },
+          {
             foreignKeyName: "product_applications_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1228,6 +1235,13 @@ export type Database = {
             referencedColumns: ["id", "tenant_id"]
           },
           {
+            foreignKeyName: "product_images_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock_available"
+            referencedColumns: ["product_id", "tenant_id"]
+          },
+          {
             foreignKeyName: "product_images_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1243,6 +1257,7 @@ export type Database = {
           on_hand: number
           product_id: string
           reserved: number
+          tenant_id: string
           updated_at: string
           warehouse_id: string
         }
@@ -1252,6 +1267,7 @@ export type Database = {
           on_hand?: number
           product_id: string
           reserved?: number
+          tenant_id: string
           updated_at?: string
           warehouse_id: string
         }
@@ -1261,30 +1277,31 @@ export type Database = {
           on_hand?: number
           product_id?: string
           reserved?: number
+          tenant_id?: string
           updated_at?: string
           warehouse_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "product_stock_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "product_stock_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "product_stock_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "product_stock_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "v_product_stock_available"
-            referencedColumns: ["product_id"]
+            referencedColumns: ["product_id", "tenant_id"]
           },
           {
-            foreignKeyName: "product_stock_warehouse_id_fkey"
-            columns: ["warehouse_id"]
+            foreignKeyName: "product_stock_warehouse_tenant_fkey"
+            columns: ["warehouse_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -1949,6 +1966,7 @@ export type Database = {
           product_id: string
           qty: number
           reference: string | null
+          tenant_id: string
           type: Database["public"]["Enums"]["stock_movement_type"]
           user_id: string | null
           warehouse_id: string
@@ -1960,6 +1978,7 @@ export type Database = {
           product_id: string
           qty: number
           reference?: string | null
+          tenant_id: string
           type: Database["public"]["Enums"]["stock_movement_type"]
           user_id?: string | null
           warehouse_id: string
@@ -1971,31 +1990,32 @@ export type Database = {
           product_id?: string
           qty?: number
           reference?: string | null
+          tenant_id?: string
           type?: Database["public"]["Enums"]["stock_movement_type"]
           user_id?: string | null
           warehouse_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stock_movements_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_movements_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "stock_movements_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_movements_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "v_product_stock_available"
-            referencedColumns: ["product_id"]
+            referencedColumns: ["product_id", "tenant_id"]
           },
           {
-            foreignKeyName: "stock_movements_warehouse_id_fkey"
-            columns: ["warehouse_id"]
+            foreignKeyName: "stock_movements_warehouse_tenant_fkey"
+            columns: ["warehouse_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -2005,6 +2025,7 @@ export type Database = {
           id: string
           product_id: string
           qty: number
+          tenant_id: string
           transfer_id: string
         }
         Insert: {
@@ -2012,6 +2033,7 @@ export type Database = {
           id?: string
           product_id: string
           qty: number
+          tenant_id: string
           transfer_id: string
         }
         Update: {
@@ -2019,29 +2041,30 @@ export type Database = {
           id?: string
           product_id?: string
           qty?: number
+          tenant_id?: string
           transfer_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stock_transfer_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_transfer_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "stock_transfer_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "stock_transfer_items_product_tenant_fkey"
+            columns: ["product_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "v_product_stock_available"
-            referencedColumns: ["product_id"]
+            referencedColumns: ["product_id", "tenant_id"]
           },
           {
-            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
-            columns: ["transfer_id"]
+            foreignKeyName: "stock_transfer_items_transfer_tenant_fkey"
+            columns: ["transfer_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "stock_transfers"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -2054,6 +2077,7 @@ export type Database = {
           id: string
           notes: string | null
           status: Database["public"]["Enums"]["stock_transfer_status"]
+          tenant_id: string
           to_warehouse_id: string
           updated_at: string
         }
@@ -2065,6 +2089,7 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: Database["public"]["Enums"]["stock_transfer_status"]
+          tenant_id: string
           to_warehouse_id: string
           updated_at?: string
         }
@@ -2076,23 +2101,24 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: Database["public"]["Enums"]["stock_transfer_status"]
+          tenant_id?: string
           to_warehouse_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stock_transfers_from_warehouse_id_fkey"
-            columns: ["from_warehouse_id"]
+            foreignKeyName: "stock_transfers_destination_tenant_fkey"
+            columns: ["to_warehouse_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
           {
-            foreignKeyName: "stock_transfers_to_warehouse_id_fkey"
-            columns: ["to_warehouse_id"]
+            foreignKeyName: "stock_transfers_source_tenant_fkey"
+            columns: ["from_warehouse_id", "tenant_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -2334,8 +2360,17 @@ export type Database = {
           on_hand_multi: number | null
           product_id: string | null
           reserved_multi: number | null
+          tenant_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
