@@ -39,7 +39,7 @@ from public.tenants where environment in ('production', 'demo');
 insert into public.warehouses (
   tenant_id, branch_id, name, code, is_default, active
 )
-select branch.tenant_id, branch.id, 'Depósito comercial', 'DEP-COM', true, true
+select branch.tenant_id, branch.id, 'Depósito comercial', 'DEP-COM', false, true
 from public.branches branch where branch.code = 'FIL-COM';
 
 insert into public.product_stock (
@@ -47,20 +47,13 @@ insert into public.product_stock (
 )
 select product.tenant_id, product.id, warehouse.id, 10, 0
 from public.products product
-join public.warehouses warehouse on warehouse.tenant_id = product.tenant_id
-where product.slug = 'produto-comercial' and warehouse.code = 'DEP-COM';
+join public.warehouses warehouse
+  on warehouse.tenant_id = product.tenant_id
+  and warehouse.is_default
+  and warehouse.active
+where product.slug = 'produto-comercial';
 
-set local role authenticated;
-select set_config(
-  'request.jwt.claim.sub',
-  '10000000-0000-0000-0000-000000000001',
-  true
-);
-select set_config(
-  'request.headers',
-  '{"x-tenant-slug":"norte-sul-real"}',
-  true
-);
+set local role service_role;
 
 do $test$
 declare
@@ -74,7 +67,9 @@ begin
   select id into selected_product_id
   from public.products where slug = 'produto-comercial';
 
-  created_order_id := public.create_storefront_order(
+  created_order_id := public.internal_create_storefront_order(
+    '10000000-0000-0000-0000-000000000001',
+    'norte-sul-real',
     jsonb_build_object(
       'name', 'Cliente Fase 1B.4',
       'email', 'cliente-fase-1b4@example.invalid',
@@ -96,7 +91,9 @@ begin
     '20000000-0000-0000-0000-000000000001'
   );
 
-  repeated_order_id := public.create_storefront_order(
+  repeated_order_id := public.internal_create_storefront_order(
+    '10000000-0000-0000-0000-000000000001',
+    'norte-sul-real',
     jsonb_build_object(
       'name', 'Cliente Fase 1B.4',
       'email', 'cliente-fase-1b4@example.invalid'
@@ -149,7 +146,9 @@ begin
   where tenant.environment = 'demo' and product.slug = 'produto-comercial';
 
   begin
-    perform public.create_storefront_order(
+    perform public.internal_create_storefront_order(
+      '10000000-0000-0000-0000-000000000001',
+      'norte-sul-real',
       '{"name":"Cross tenant","email":"cross@example.invalid"}',
       jsonb_build_array(jsonb_build_object(
         'product_id', demo_product,
