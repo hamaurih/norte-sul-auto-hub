@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { Building2, CheckCircle2, Copy, Mail, ShieldCheck, XCircle } from "lucid
 import {
   activeTenant,
   environmentLabel,
+  fetchAccessContext,
   isOrganizationAdmin,
   useAccessContext,
 } from "@/lib/access";
@@ -15,8 +16,21 @@ import { setActiveTenantSlug } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/homologacao")({
   head: () => ({ meta: [{ title: "Homologação de acesso · Admin" }] }),
+  beforeLoad: async () => {
+    // Owner/admin of the organization only. Membership decides, never metadata.
+    const context = await fetchAccessContext();
+    if (!context.user_id) throw redirect({ to: "/auth" });
+    if (context.organizations.length === 0 && context.tenants.length === 0) {
+      throw redirect({ to: "/ativacao" });
+    }
+    const privileged =
+      isOrganizationAdmin(context) ||
+      context.tenants.some((tenant: { role: string }) => tenant.role === "owner" || tenant.role === "admin");
+    if (!privileged) throw redirect({ to: "/admin" });
+  },
   component: HomologationPage,
 });
+
 
 function HomologationPage() {
   const { data: context, isLoading } = useAccessContext();
