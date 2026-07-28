@@ -82,17 +82,19 @@ from public.products product where product.id = image.product_id;
 update public.product_applications application set tenant_id = product.tenant_id
 from public.products product where product.id = application.product_id;
 
-do $$
-declare table_name text;
+do $
+declare table_name text; has_unassigned boolean;
 begin
   foreach table_name in array array['brands','categories','products','product_images','product_applications']
   loop
-    if exists (execute format('select 1 from public.%I where tenant_id is null', table_name)) then
+    execute format('select exists (select 1 from public.%I where tenant_id is null)', table_name)
+      into has_unassigned;
+    if has_unassigned then
       raise exception 'Cannot tenantize %: rows without tenant assignment', table_name;
     end if;
   end loop;
 end;
-$$;
+$;
 
 alter table public.brands alter column tenant_id set not null;
 alter table public.categories alter column tenant_id set not null;
