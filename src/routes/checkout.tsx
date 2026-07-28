@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { activeTenantSlug } from "@/integrations/supabase/client";
+import { createStorefrontOrder } from "@/lib/order.functions";
 import { useCart, cartStore } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
 import { brl } from "@/lib/format";
@@ -82,29 +83,31 @@ function Checkout() {
     if (!user) return;
     setSaving(true);
     try {
-      const { data: orderId, error } = await supabase.rpc("create_storefront_order", {
-        p_customer: {
-          name: parsed.data.customer_name,
-          email: parsed.data.customer_email,
-          phone: parsed.data.customer_phone,
-          document: parsed.data.customer_document,
-          shipping_zip: parsed.data.shipping_zip,
-          shipping_street: parsed.data.shipping_street,
-          shipping_number: parsed.data.shipping_number,
-          shipping_complement: parsed.data.shipping_complement,
-          shipping_neighborhood: parsed.data.shipping_neighborhood,
-          shipping_city: parsed.data.shipping_city,
-          shipping_state: parsed.data.shipping_state,
+      const result = await createStorefrontOrder({
+        data: {
+          tenantSlug: activeTenantSlug(),
+          customer: {
+            name: parsed.data.customer_name,
+            email: parsed.data.customer_email,
+            phone: parsed.data.customer_phone,
+            document: parsed.data.customer_document,
+            shipping_zip: parsed.data.shipping_zip,
+            shipping_street: parsed.data.shipping_street,
+            shipping_number: parsed.data.shipping_number,
+            shipping_complement: parsed.data.shipping_complement,
+            shipping_neighborhood: parsed.data.shipping_neighborhood,
+            shipping_city: parsed.data.shipping_city,
+            shipping_state: parsed.data.shipping_state,
+          },
+          items: items.map((item) => ({
+            product_id: item.productId,
+            quantity: item.quantity,
+          })),
+          paymentMethod: parsed.data.payment_method,
+          idempotencyKey: idempotencyKey.current,
         },
-        p_items: items.map((item) => ({
-          product_id: item.productId,
-          quantity: item.quantity,
-        })),
-        p_payment_method: parsed.data.payment_method,
-        p_idempotency_key: idempotencyKey.current,
       });
-      if (error) throw error;
-      if (!orderId) throw new Error("Pedido não retornado");
+      if (!result.id) throw new Error("Pedido não retornado");
       idempotencyKey.current = crypto.randomUUID();
 
       cartStore.clear();
