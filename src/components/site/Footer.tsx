@@ -11,9 +11,12 @@ import {
   Truck,
   Lock,
 } from "lucide-react";
-import logo from "@/assets/norte-sul-logo.png.asset.json";
+import { CompanyLogo } from "@/components/site/CompanyLogo";
+import { useCompanyProfile } from "@/lib/company";
 
 export function Footer() {
+  const { data: company } = useCompanyProfile();
+  const whatsappHref = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, "")}` : "#";
   return (
     <footer className="mt-16 border-t border-border bg-secondary text-secondary-foreground">
       {/* Trust strip */}
@@ -34,16 +37,9 @@ export function Footer() {
 
       <div className="container-x grid gap-8 py-10 md:grid-cols-5">
         <div className="md:col-span-2">
-          <img
-            src={logo.url}
-            alt="Norte Sul Acessórios e Peças"
-            className="h-24 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]"
-            loading="lazy"
-            decoding="async"
-          />
+          <CompanyLogo dark className="h-24 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]" />
           <p className="mt-3 max-w-sm text-sm text-white/70">
-            Som, iluminação, performance e segurança para todo tipo de carro. Atacado e varejo com
-            entrega em todo o Brasil.
+            {company?.store_description || "Som, iluminação, performance e segurança para todo tipo de carro."}
           </p>
           <div className="mt-4 flex gap-2">
             <a
@@ -68,7 +64,7 @@ export function Footer() {
               <Youtube className="h-4 w-4" />
             </a>
             <a
-              href="https://wa.me/5500000000000"
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"
@@ -92,10 +88,10 @@ export function Footer() {
         <div>
           <h4 className="mb-3 font-display text-sm font-bold uppercase tracking-wider">Atendimento</h4>
           <ul className="space-y-2 text-sm text-white/70">
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> (00) 0000-0000</li>
+            <li className="flex items-center gap-2"><Phone className="h-4 w-4" /> {company?.phone || "Telefone não informado"}</li>
             <li className="flex items-center gap-2"><MessageCircle className="h-4 w-4" /> WhatsApp comercial</li>
-            <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> contato@nortesul.com.br</li>
-            <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Seg a Sex, 8h-18h</li>
+            <li className="flex items-center gap-2"><Mail className="h-4 w-4" /> {company?.email || "E-mail não informado"}</li>
+            <li className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {company?.business_hours || "Horário não informado"}</li>
           </ul>
         </div>
 
@@ -119,8 +115,8 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10 bg-black/40 py-3 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} Norte Sul Acessórios · CNPJ 00.000.000/0001-00 · Todos os direitos
-        reservados
+        © {new Date().getFullYear()} {company?.trade_name || "Loja"}
+        {company?.tax_id ? ` · CNPJ/CPF ${company.tax_id}` : ""} · {company?.footer_text || "Todos os direitos reservados"}
       </div>
     </footer>
   );
