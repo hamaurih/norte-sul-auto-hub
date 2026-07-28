@@ -23,7 +23,10 @@ export default defineTool({
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
+      {
+        global: { headers: { "x-tenant-slug": process.env.PUBLIC_TENANT_SLUG ?? "norte-sul-real" } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      },
     );
     const safe = query.replace(/[,()]/g, " ");
 

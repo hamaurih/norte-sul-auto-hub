@@ -1,10 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertStaff(supabase: any, userId: string) {
-  const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  const isStaff = (roles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "gerente");
-  if (!isStaff) throw new Error("Forbidden");
+async function requireCatalogTenant(supabase: any, userId: string, tenantId: string) {
+  const { data, error } = await supabase
+    .from("tenant_memberships")
+    .select("tenant_id, role")
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
+    .eq("active", true);
+  if (error) throw new Error(error.message);
+  const membership = (data ?? []).find((item: { role: string }) =>
+    ["owner", "admin", "manager", "stock"].includes(item.role),
+  );
+  if (!membership) throw new Error("Usuário sem permissão para administrar o catálogo");
+  return membership as { tenant_id: string; role: string };
 }
 
 export type ProductInput = {
@@ -42,12 +51,12 @@ export const productUpsert = createServerFn({ method: "POST" })
   .inputValidator((input: ProductInput) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    await assertStaff(supabase, userId);
+    const membership = await requireCatalogTenant(supabase, userId, context.tenantId);
     const { images, id, ...row } = data;
-    const payload = { ...row, updated_at: new Date().toISOString() };
+    const payload = { ...row, tenant_id: membership.tenant_id, updated_at: new Date().toISOString() };
     let productId = id;
     if (id) {
-      const { error } = await supabase.from("products").update(payload).eq("id", id);
+      const { error } = await supabase.from("products").update(payload).eq("id", id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
     } else {
       const { data: inserted, error } = await supabase.from("products").insert(payload).select("id").single();
@@ -56,10 +65,11 @@ export const productUpsert = createServerFn({ method: "POST" })
     }
     // Replace images
     if (images && productId) {
-      await supabase.from("product_images").delete().eq("product_id", productId);
+      await supabase.from("product_images").delete().eq("product_id", productId).eq("tenant_id", membership.tenant_id);
       if (images.length > 0) {
         const rows = images.map((img, i) => ({
           product_id: productId!,
+          tenant_id: membership.tenant_id,
           url: img.url,
           alt: img.alt ?? null,
           is_primary: img.is_primary ?? i === 0,
@@ -76,8 +86,12 @@ export const productDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
-    const { error } = await context.supabase.from("products").delete().eq("id", data.id);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const { error } = await context.supabase
+      .from("products")
+      .delete()
+      .eq("id", data.id)
+      .eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -86,9 +100,9 @@ export const productToggle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string; field: "active" | "featured" | "is_new" | "is_bestseller" | "is_offer"; value: boolean }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const patch: Record<string, boolean> = { [data.field]: data.value };
-    const { error } = await context.supabase.from("products").update(patch as never).eq("id", data.id);
+    const { error } = await context.supabase.from("products").update(patch as never).eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -97,8 +111,13 @@ export const productDuplicate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
-    const { data: src, error } = await context.supabase.from("products").select("*").eq("id", data.id).single();
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
+    const { data: src, error } = await context.supabase
+      .from("products")
+      .select("*")
+      .eq("id", data.id)
+      .eq("tenant_id", membership.tenant_id)
+      .single();
     if (error || !src) throw new Error(error?.message ?? "Produto não encontrado");
     const suffix = Math.random().toString(36).slice(2, 6);
     const { id: _id, created_at: _c, updated_at: _u, sales_count: _s, bling_id: _b, ...rest } = src as any;
@@ -112,9 +131,9 @@ export const productDuplicate = createServerFn({ method: "POST" })
     const { data: inserted, error: insErr } = await context.supabase.from("products").insert(copy).select("id").single();
     if (insErr) throw new Error(insErr.message);
     // Copy images
-    const { data: imgs } = await context.supabase.from("product_images").select("url, alt, is_primary, sort_order").eq("product_id", data.id);
+    const { data: imgs } = await context.supabase.from("product_images").select("url, alt, is_primary, sort_order").eq("product_id", data.id).eq("tenant_id", membership.tenant_id);
     if (imgs && imgs.length > 0) {
-      await context.supabase.from("product_images").insert(imgs.map((i) => ({ ...i, product_id: inserted.id })));
+      await context.supabase.from("product_images").insert(imgs.map((i) => ({ ...i, product_id: inserted.id, tenant_id: membership.tenant_id })));
     }
     return { ok: true, id: inserted.id };
   });

@@ -11,10 +11,17 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // Staff guard
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-    const isStaff = (roles ?? []).some((r) => r.role === "admin" || r.role === "gerente");
-    if (!isStaff) throw new Error("Forbidden");
+    const { data: memberships, error: membershipError } = await supabase
+      .from("tenant_memberships")
+      .select("tenant_id, role")
+      .eq("user_id", userId)
+      .eq("tenant_id", context.tenantId)
+      .eq("active", true);
+    if (membershipError) throw new Error(membershipError.message);
+    const membership = (memberships ?? []).find((item) =>
+      ["owner", "admin", "manager"].includes(item.role),
+    );
+    if (!membership) throw new Error("Usuário sem permissão para convidar vendedor");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -34,14 +41,28 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
     }
     if (!newUserId) throw new Error("Não foi possível criar o usuário");
 
-    // Grant vendedor role
-    await supabaseAdmin.from("user_roles").upsert({ user_id: newUserId, role: "vendedor" }, { onConflict: "user_id,role" });
+    // Keep the legacy role during the transition and grant tenant-scoped access.
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: newUserId, role: "vendedor" },
+      { onConflict: "user_id,role" },
+    );
+    const { error: tenantRoleError } = await supabaseAdmin.from("tenant_memberships").upsert(
+      {
+        tenant_id: membership.tenant_id,
+        user_id: newUserId,
+        role: "sales",
+        active: true,
+      },
+      { onConflict: "tenant_id,user_id" },
+    );
+    if (tenantRoleError) throw new Error(tenantRoleError.message);
 
     // Insert sales_reps row
     const { data: rep, error: repErr } = await supabaseAdmin
       .from("sales_reps")
       .upsert(
         {
+          tenant_id: membership.tenant_id,
           user_id: newUserId,
           full_name: data.full_name,
           email: data.email.toLowerCase(),
@@ -50,7 +71,7 @@ export const inviteSalesRep = createServerFn({ method: "POST" })
           notes: data.notes ?? null,
           invited_by: userId,
         },
-        { onConflict: "email" },
+        { onConflict: "tenant_id,email" },
       )
       .select()
       .single();

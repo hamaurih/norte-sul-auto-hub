@@ -2,10 +2,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { slugify } from "@/lib/format";
 
-async function assertStaff(supabase: any, userId: string) {
-  const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  const isStaff = (roles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "gerente");
-  if (!isStaff) throw new Error("Forbidden");
+async function requireCatalogTenant(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("tenant_memberships")
+    .select("tenant_id, role")
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
+    .eq("active", true);
+  if (error) throw new Error(error.message);
+  const membership = (data ?? []).find((item: { role: string }) =>
+    ["owner", "admin", "manager", "stock"].includes(item.role),
+  );
+  if (!membership) throw new Error("Usuário sem permissão para administrar o catálogo");
+  return membership as { tenant_id: string; role: string };
 }
 
 // -------- BRANDS --------
@@ -21,13 +30,19 @@ export const brandUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: BrandInput) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
-    const row = { name, slug, logo_url: data.logo_url ?? null, featured: data.featured ?? false };
+    const row = {
+      tenant_id: membership.tenant_id,
+      name,
+      slug,
+      logo_url: data.logo_url ?? null,
+      featured: data.featured ?? false,
+    };
     if (data.id) {
-      const { error } = await context.supabase.from("brands").update(row).eq("id", data.id);
+      const { error } = await context.supabase.from("brands").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
@@ -40,13 +55,14 @@ export const brandDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const { count } = await context.supabase
       .from("products")
       .select("id", { count: "exact", head: true })
-      .eq("brand_id", data.id);
+      .eq("brand_id", data.id)
+      .eq("tenant_id", membership.tenant_id);
     if ((count ?? 0) > 0) throw new Error(`Marca em uso por ${count} produto(s). Reatribua antes de excluir.`);
-    const { error } = await context.supabase.from("brands").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("brands").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -67,11 +83,12 @@ export const categoryUpsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CategoryInput) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const name = data.name.trim();
     if (!name) throw new Error("Nome obrigatório");
     const slug = (data.slug && data.slug.trim()) || slugify(name);
     const row = {
+      tenant_id: membership.tenant_id,
       name,
       slug,
       parent_id: data.parent_id || null,
@@ -82,7 +99,7 @@ export const categoryUpsert = createServerFn({ method: "POST" })
     };
     if (data.id) {
       if (row.parent_id === data.id) throw new Error("Categoria não pode ser pai dela mesma");
-      const { error } = await context.supabase.from("categories").update(row).eq("id", data.id);
+      const { error } = await context.supabase.from("categories").update(row).eq("id", data.id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
       return { ok: true, id: data.id };
     }
@@ -95,14 +112,14 @@ export const categoryDelete = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId);
+    const membership = await requireCatalogTenant(context.supabase, context.userId, context.tenantId);
     const [{ count: prodCount }, { count: childCount }] = await Promise.all([
-      context.supabase.from("products").select("id", { count: "exact", head: true }).or(`category_id.eq.${data.id},subcategory_id.eq.${data.id}`),
-      context.supabase.from("categories").select("id", { count: "exact", head: true }).eq("parent_id", data.id),
+      context.supabase.from("products").select("id", { count: "exact", head: true }).or(`category_id.eq.${data.id},subcategory_id.eq.${data.id}`).eq("tenant_id", membership.tenant_id),
+      context.supabase.from("categories").select("id", { count: "exact", head: true }).eq("parent_id", data.id).eq("tenant_id", membership.tenant_id),
     ]);
     if ((prodCount ?? 0) > 0) throw new Error(`Categoria em uso por ${prodCount} produto(s).`);
     if ((childCount ?? 0) > 0) throw new Error(`Categoria possui ${childCount} subcategoria(s). Exclua-as primeiro.`);
-    const { error } = await context.supabase.from("categories").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("categories").delete().eq("id", data.id).eq("tenant_id", membership.tenant_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

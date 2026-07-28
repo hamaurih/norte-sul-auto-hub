@@ -15,6 +15,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { TenantEnvironmentSwitcher } from "@/components/admin/TenantEnvironmentSwitcher";
+import { CompanyTheme } from "@/components/site/CompanyTheme";
 
 function NotFoundComponent() {
   return (
@@ -115,8 +117,10 @@ function RootComponent() {
   const hideChrome = isAuth || isPanel;
   return (
     <QueryClientProvider client={queryClient}>
+      <CompanyTheme />
       <div className="flex min-h-screen flex-col">
         {!hideChrome && <Header />}
+        {isPanel && <TenantEnvironmentSwitcher />}
         <main className="flex-1">
           <Outlet />
         </main>

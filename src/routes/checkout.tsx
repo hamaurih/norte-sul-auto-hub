@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { createStorefrontOrder } from "@/lib/order.functions";
 import { useCart, cartStore } from "@/lib/cart-store";
 import { useSession } from "@/lib/session";
 import { brl } from "@/lib/format";
@@ -32,6 +32,7 @@ function Checkout() {
   const { user, loading, isB2BApproved } = useSession();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const idempotencyKey = useRef(crypto.randomUUID());
   const [form, setForm] = useState<z.infer<typeof schema>>({
     customer_name: "",
     customer_email: "",
@@ -81,33 +82,34 @@ function Checkout() {
     if (!user) return;
     setSaving(true);
     try {
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user.id,
-          status: "aguardando_pagamento",
-          is_b2b: isB2BApproved,
-          subtotal,
-          total: subtotal,
-          ...parsed.data,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      const itemsPayload = items.map((i) => ({
-        order_id: order.id,
-        product_id: i.productId,
-        sku: i.sku,
-        name: i.name,
-        quantity: i.quantity,
-        unit_price: i.unitPrice,
-        total: i.unitPrice * i.quantity,
-      }));
-      const { error: itemsErr } = await supabase.from("order_items").insert(itemsPayload);
-      if (itemsErr) throw itemsErr;
+      const result = await createStorefrontOrder({
+        data: {
+          customer: {
+            name: parsed.data.customer_name,
+            email: parsed.data.customer_email,
+            phone: parsed.data.customer_phone,
+            document: parsed.data.customer_document,
+            shipping_zip: parsed.data.shipping_zip,
+            shipping_street: parsed.data.shipping_street,
+            shipping_number: parsed.data.shipping_number,
+            shipping_complement: parsed.data.shipping_complement,
+            shipping_neighborhood: parsed.data.shipping_neighborhood,
+            shipping_city: parsed.data.shipping_city,
+            shipping_state: parsed.data.shipping_state,
+          },
+          items: items.map((item) => ({
+            product_id: item.productId,
+            quantity: item.quantity,
+          })),
+          paymentMethod: parsed.data.payment_method,
+          idempotencyKey: idempotencyKey.current,
+        },
+      });
+      if (!result.id) throw new Error("Pedido não retornado");
+      idempotencyKey.current = crypto.randomUUID();
 
       cartStore.clear();
-      toast.success("Pedido criado! Estamos enviando ao Bling…");
+      toast.success("Pedido criado e estoque reservado.");
       navigate({ to: "/pedidos" });
     } catch (err) {
       console.error(err);
@@ -183,7 +185,7 @@ function Checkout() {
             {saving ? "Enviando…" : "Confirmar pedido"}
           </button>
           <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Ao confirmar, seu pedido será enviado à integração Bling quando disponível.
+            Ao confirmar, o estoque será reservado até a confirmação do pagamento.
           </p>
         </aside>
       </form>
