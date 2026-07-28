@@ -29,10 +29,20 @@ export default defineTool({
         isError: true,
       };
     }
+    const tenantSlug = process.env.TENANT_STOREFRONT_SLUG;
+    if (!tenantSlug) {
+      return {
+        content: [{ type: "text", text: "TENANT_STOREFRONT_SLUG não configurado." }],
+        isError: true,
+      };
+    }
     const supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
+      {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: { headers: { "x-tenant-slug": tenantSlug } },
+      },
     );
     let q = supabase
       .from("products")
