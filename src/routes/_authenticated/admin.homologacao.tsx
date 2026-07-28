@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import { Building2, CheckCircle2, Copy, Mail, ShieldCheck, XCircle } from "lucid
 import {
   activeTenant,
   environmentLabel,
+  fetchAccessContext,
   isOrganizationAdmin,
   useAccessContext,
 } from "@/lib/access";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/admin/homologacao")({
     }
     const privileged =
       isOrganizationAdmin(context) ||
-      context.tenants.some((tenant) => tenant.role === "owner" || tenant.role === "admin");
+      context.tenants.some((tenant: { role: string }) => tenant.role === "owner" || tenant.role === "admin");
     if (!privileged) throw redirect({ to: "/admin" });
   },
   component: HomologationPage,
