@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building2, Image, MapPin, Palette, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchAccessContext } from "@/lib/access";
+import { fetchAccessContext, isLegacyStaff } from "@/lib/access";
 import { useCompanyProfile, type CompanyProfile } from "@/lib/company";
 import { saveCompanyProfile, type CompanyProfileInput } from "@/lib/company.functions";
 
