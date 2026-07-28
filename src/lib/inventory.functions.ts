@@ -1,11 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertStaff(sb: any, userId: string, roles: string[] = ["admin", "gerente"]) {
-  const { data } = await sb.from("user_roles").select("role").eq("user_id", userId);
-  if (!(data ?? []).some((r: { role: string }) => roles.includes(r.role))) throw new Error("Forbidden");
-}
-
 async function requireTenantRole(
   sb: any,
   userId: string,
@@ -96,9 +91,15 @@ export const listStockByProduct = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { productId: string }) => input)
   .handler(async ({ data, context }) => {
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
+    );
     const { data: rows, error } = await context.supabase
       .from("product_stock")
       .select("id, warehouse_id, on_hand, reserved, min_stock, warehouse:warehouses(name, code, branch:branches(name, code))")
+      .eq("tenant_id", membership.tenant_id)
       .eq("product_id", data.productId);
     if (error) throw new Error(error.message);
     return rows ?? [];
@@ -112,27 +113,34 @@ export const adjustStock = createServerFn({ method: "POST" })
     reference?: string; notes?: string;
   }) => input)
   .handler(async ({ data, context }) => {
-    await assertStaff(context.supabase, context.userId, ["admin", "gerente", "vendedor"]);
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock"],
+    );
     const sb = context.supabase;
     // upsert product_stock row
     const { data: existing } = await sb
       .from("product_stock")
       .select("id, on_hand")
+      .eq("tenant_id", membership.tenant_id)
       .eq("product_id", data.product_id)
       .eq("warehouse_id", data.warehouse_id)
       .maybeSingle();
     const delta = data.type === "OUT" ? -Math.abs(data.qty) : data.type === "IN" ? Math.abs(data.qty) : data.qty;
     const newOnHand = data.type === "ADJUST" ? data.qty : Math.max((existing?.on_hand ?? 0) + delta, 0);
     if (existing) {
-      const { error } = await sb.from("product_stock").update({ on_hand: newOnHand }).eq("id", existing.id);
+      const { error } = await sb.from("product_stock").update({ on_hand: newOnHand }).eq("id", existing.id).eq("tenant_id", membership.tenant_id);
       if (error) throw new Error(error.message);
     } else {
       const { error } = await sb.from("product_stock").insert({
+        tenant_id: membership.tenant_id,
         product_id: data.product_id, warehouse_id: data.warehouse_id, on_hand: newOnHand,
       });
       if (error) throw new Error(error.message);
     }
-    await sb.from("stock_movements").insert({
+    const { error: movementError } = await sb.from("stock_movements").insert({
+      tenant_id: membership.tenant_id,
       product_id: data.product_id,
       warehouse_id: data.warehouse_id,
       type: data.type,
@@ -141,6 +149,7 @@ export const adjustStock = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       user_id: context.userId,
     });
+    if (movementError) throw new Error(movementError.message);
     return { ok: true, on_hand: newOnHand };
   });
 
@@ -148,9 +157,15 @@ export const listMovements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { warehouseId?: string; limit?: number }) => input)
   .handler(async ({ data, context }) => {
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
+    );
     let q = context.supabase
       .from("stock_movements")
       .select("id, type, qty, reference, notes, created_at, product:products(sku, name), warehouse:warehouses(name, code)")
+      .eq("tenant_id", membership.tenant_id)
       .order("created_at", { ascending: false })
       .limit(data.limit ?? 50);
     if (data.warehouseId) q = q.eq("warehouse_id", data.warehouseId);
@@ -162,17 +177,22 @@ export const listMovements = createServerFn({ method: "GET" })
 export const stockOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertStaff(context.supabase, context.userId, ["admin", "gerente", "vendedor"]);
+    const membership = await requireTenantRole(
+      context.supabase,
+      context.userId,
+      ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
+    );
     const sb = context.supabase;
-    const { data: branches } = await sb.from("branches").select("id, name, code, is_main").eq("active", true);
+    const { data: branches } = await sb.from("branches").select("id, name, code, is_main").eq("tenant_id", membership.tenant_id).eq("active", true);
     const results: { branch: any; total_on_hand: number; total_reserved: number; skus: number }[] = [];
     for (const b of branches ?? []) {
-      const { data: whs } = await sb.from("warehouses").select("id").eq("branch_id", b.id);
+      const { data: whs } = await sb.from("warehouses").select("id").eq("tenant_id", membership.tenant_id).eq("branch_id", b.id);
       const whIds = (whs ?? []).map((w) => w.id);
       if (whIds.length === 0) { results.push({ branch: b, total_on_hand: 0, total_reserved: 0, skus: 0 }); continue; }
       const { data: agg } = await sb
         .from("product_stock")
         .select("on_hand, reserved, product_id")
+        .eq("tenant_id", membership.tenant_id)
         .in("warehouse_id", whIds);
       const total_on_hand = (agg ?? []).reduce((s, r) => s + (r.on_hand ?? 0), 0);
       const total_reserved = (agg ?? []).reduce((s, r) => s + (r.reserved ?? 0), 0);
