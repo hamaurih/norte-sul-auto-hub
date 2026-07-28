@@ -209,7 +209,9 @@ for each row execute function public.set_updated_at();
 create index idx_customers_tenant_email on public.customers(tenant_id, email);
 create index idx_customers_user on public.customers(user_id) where user_id is not null;
 create index idx_sales_reps_tenant_active on public.sales_reps(tenant_id, active);
+create index idx_sales_reps_user on public.sales_reps(user_id) where user_id is not null;
 create index idx_sales_reps_invited_by on public.sales_reps(invited_by) where invited_by is not null;
+create index idx_sales_rep_customers_tenant on public.sales_rep_customers(tenant_id);
 create index idx_sales_rep_customers_rep_tenant on public.sales_rep_customers(rep_id, tenant_id);
 create index idx_sales_rep_customers_customer_tenant on public.sales_rep_customers(customer_id, tenant_id);
 create index idx_sales_orders_tenant_created on public.sales_orders(tenant_id, created_at desc);
@@ -218,15 +220,19 @@ create index idx_sales_orders_customer_tenant on public.sales_orders(customer_id
 create index idx_sales_orders_order_tenant on public.sales_orders(order_id, tenant_id);
 create index idx_quotes_tenant_created on public.quotes(tenant_id, created_at desc);
 create index idx_quotes_branch_tenant on public.quotes(branch_id, tenant_id);
+create index idx_quotes_customer_tenant on public.quotes(customer_id, tenant_id);
 create index idx_quotes_sales_rep_tenant on public.quotes(sales_rep_id, tenant_id);
 create index idx_quotes_created_by on public.quotes(created_by) where created_by is not null;
 create index idx_quote_items_quote_tenant on public.quote_items(quote_id, tenant_id);
 create index idx_quote_items_product_tenant on public.quote_items(product_id, tenant_id);
+create index idx_quote_items_tenant on public.quote_items(tenant_id);
 create index idx_orders_tenant_created on public.orders(tenant_id, created_at desc);
 create index idx_orders_tenant_user on public.orders(tenant_id, user_id);
+create index idx_orders_user on public.orders(user_id);
 create index idx_orders_customer_tenant on public.orders(customer_id, tenant_id);
 create index idx_order_items_order_tenant on public.order_items(order_id, tenant_id);
 create index idx_order_items_product_tenant on public.order_items(product_id, tenant_id);
+create index idx_order_items_tenant on public.order_items(tenant_id);
 create index idx_stock_reservations_tenant_expiry
   on public.stock_reservations(tenant_id, expires_at) where status = 'active';
 create index idx_stock_reservations_order_tenant on public.stock_reservations(order_id, tenant_id);
@@ -655,7 +661,8 @@ begin
 end;
 $function$;
 
-revoke all on function public.create_storefront_order(jsonb, jsonb, text, uuid) from public;
+revoke all on function public.create_storefront_order(jsonb, jsonb, text, uuid)
+  from public, anon, authenticated;
 grant execute on function public.create_storefront_order(jsonb, jsonb, text, uuid) to authenticated;
 
 commit;
