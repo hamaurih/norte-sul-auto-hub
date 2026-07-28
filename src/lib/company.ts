@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { activeTenantSlug, supabase } from "@/integrations/supabase/client";
 
 export type CompanyProfile = {
   tenant_id: string;
@@ -35,9 +35,19 @@ export type CompanyProfile = {
 };
 
 export async function fetchCompanyProfile(): Promise<CompanyProfile | null> {
+  const { data: storefront, error: storefrontError } = await supabase
+    .from("tenant_storefronts")
+    .select("tenant_id")
+    .eq("slug", activeTenantSlug())
+    .eq("active", true)
+    .maybeSingle();
+  if (storefrontError) throw new Error(storefrontError.message);
+  if (!storefront) return null;
+
   const { data, error } = await supabase
     .from("tenant_company_profiles")
     .select("*")
+    .eq("tenant_id", storefront.tenant_id)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data as CompanyProfile | null;
