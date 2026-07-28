@@ -4,12 +4,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 async function requireTenantRole(
   sb: any,
   userId: string,
+  tenantId: string,
   roles: string[] = ["owner", "admin", "manager"],
 ) {
   const { data, error } = await sb
     .from("tenant_memberships")
     .select("tenant_id, role")
     .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
     .eq("active", true);
 
   if (error) throw new Error(error.message);
@@ -25,6 +27,7 @@ export const listBranches = createServerFn({ method: "GET" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
     const { data, error } = await context.supabase
@@ -45,7 +48,7 @@ export const upsertBranch = createServerFn({ method: "POST" })
     email?: string | null; is_main?: boolean; active?: boolean;
   }) => input)
   .handler(async ({ data, context }) => {
-    const membership = await requireTenantRole(context.supabase, context.userId);
+    const membership = await requireTenantRole(context.supabase, context.userId, context.tenantId);
     const { id, ...row } = data;
     if (id) {
       const { error } = await context.supabase.from("branches").update(row).eq("id", id).eq("tenant_id", membership.tenant_id);
@@ -73,6 +76,7 @@ export const upsertWarehouse = createServerFn({ method: "POST" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock"],
     );
     const { id, ...row } = data;
@@ -94,6 +98,7 @@ export const listStockByProduct = createServerFn({ method: "GET" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
     const { data: rows, error } = await context.supabase
@@ -116,6 +121,7 @@ export const adjustStock = createServerFn({ method: "POST" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock"],
     );
     const sb = context.supabase;
@@ -160,6 +166,7 @@ export const listMovements = createServerFn({ method: "GET" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
     let q = context.supabase
@@ -180,6 +187,7 @@ export const stockOverview = createServerFn({ method: "GET" })
     const membership = await requireTenantRole(
       context.supabase,
       context.userId,
+      context.tenantId,
       ["owner", "admin", "manager", "stock", "sales", "cashier", "finance", "accountant", "support", "viewer"],
     );
     const sb = context.supabase;
