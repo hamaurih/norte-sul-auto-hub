@@ -15,8 +15,21 @@ import { setActiveTenantSlug } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/homologacao")({
   head: () => ({ meta: [{ title: "Homologação de acesso · Admin" }] }),
+  beforeLoad: async () => {
+    // Owner/admin of the organization only. Membership decides, never metadata.
+    const context = await fetchAccessContext();
+    if (!context.user_id) throw redirect({ to: "/auth" });
+    if (context.organizations.length === 0 && context.tenants.length === 0) {
+      throw redirect({ to: "/ativacao" });
+    }
+    const privileged =
+      isOrganizationAdmin(context) ||
+      context.tenants.some((tenant) => tenant.role === "owner" || tenant.role === "admin");
+    if (!privileged) throw redirect({ to: "/admin" });
+  },
   component: HomologationPage,
 });
+
 
 function HomologationPage() {
   const { data: context, isLoading } = useAccessContext();
