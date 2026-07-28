@@ -21,18 +21,34 @@
 - **Sem service_role no frontend.** O convite é criado por server function autenticada, usando
   o cliente com RLS do próprio administrador.
 
-## Primeiro owner
+## Primeiro owner (hamaurih@gmail.com)
+
+Endereço autorizado para o primeiro convite owner da organização existente no Supabase de
+desenvolvimento: **hamaurih@gmail.com**. O e-mail sozinho não concede nada — ele apenas define
+para quem o convite de uso único é válido; o vínculo só nasce do aceite server-side.
 
 1. Aplicar `supabase/phase-1e1/20260728140000_create_tenant_invitations.sql` no projeto de
    desenvolvimento.
-2. Gerar um token aleatório fora do banco (por exemplo `openssl rand -hex 32`).
-3. Executar com papel confiável (service_role):
-   `select private.create_owner_invitation('norte-sul', 'proprietario@empresa.com.br', '<token>');`
-4. O proprietário se cadastra normalmente pelo Supabase Auth com esse mesmo e-mail.
-5. Ele abre `/ativacao?token=<token>` e conclui o vínculo. O aceite cria a associação `owner` na
-   organização e a associação de tenant em **todos** os tenants ativos da organização
-   (conta real e conta de teste).
-6. A partir daí ele emite os demais convites em **Admin → Homologação**.
+2. Rodar, com a connection string do DEV:
+
+   ```bash
+   DEV_DATABASE_URL="postgresql://..." \
+   OWNER_EMAIL="hamaurih@gmail.com" \
+   ORG_SLUG="norte-sul" \
+   APP_URL="http://localhost:8080" \
+   ./scripts/bootstrap-owner-invite.sh
+   ```
+
+   O script gera o token localmente (`openssl rand -hex 32`), grava apenas o hash SHA-256 via
+   `private.create_owner_invitation` (executável só por `service_role`) e imprime o link de
+   ativação uma única vez. Não redirecione a saída para arquivo nem rode com `bash -x`.
+3. O proprietário cria a conta / faz login normalmente pelo Supabase Auth com esse mesmo e-mail.
+   Nenhuma senha é definida por nós e não existe credencial fixa no repositório.
+4. Ele abre o link `/ativacao?token=…` (o token é removido da URL logo ao carregar) ou cola o
+   código na tela de ativação. O aceite valida token, expiração, uso único e igualdade do e-mail
+   contra o JWT — nunca `user_metadata` — e cria a associação `owner` na organização mais a
+   associação em **todos** os tenants ativos (conta real e conta de teste).
+5. A partir daí ele emite os demais convites em **Admin → Homologação**.
 
 ## Fluxo do aplicativo
 
