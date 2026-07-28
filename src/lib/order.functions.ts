@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type StorefrontOrderInput = {
-  tenantSlug: string;
   customer: {
     name: string;
     email: string;
@@ -30,7 +29,7 @@ export const createStorefrontOrder = createServerFn({ method: "POST" })
       "internal_create_storefront_order",
       {
         p_user_id: context.userId,
-        p_tenant_slug: data.tenantSlug,
+        p_tenant_slug: context.tenantSlug,
         p_customer: data.customer,
         p_items: data.items,
         p_payment_method: data.paymentMethod,
