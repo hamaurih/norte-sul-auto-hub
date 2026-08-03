@@ -23,12 +23,12 @@ These rules apply to every frontend or interface change in this repository.
    - existing local components;
    - the official shadcn/ui registry;
    - configured registries in `components.json`.
-4. For shadcn-compatible projects, use the project's package runner with the current CLI:
-   - inspect: `npx shadcn@latest info`;
-   - search: `npx shadcn@latest search @shadcn -q "<need>"`;
-   - documentation: `npx shadcn@latest docs <component>`;
-   - preview source: `npx shadcn@latest view @shadcn/<component>`.
-5. Prefer composing existing primitives and blocks over creating parallel bespoke components. Create custom UI only when the registries do not provide an adequate base.
+4. Use the project's package manager for the current shadcn CLI:
+   - npm: `npx shadcn@latest ...`;
+   - pnpm: `pnpm dlx shadcn@latest ...`;
+   - Bun: `bunx --bun shadcn@latest ...`.
+5. With that runner, always inspect `info`; search with `search @shadcn -q "<need>"`; load documentation with `docs <component>`; and preview source with `view @shadcn/<component>` before implementing.
+6. Prefer composing existing primitives and blocks over creating parallel bespoke components. Create custom UI only when the registries do not provide an adequate base.
 
 ### Safe adoption and updates
 
