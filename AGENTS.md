@@ -56,3 +56,55 @@ Official references:
 - https://ui.shadcn.com/docs/cli
 - https://ui.shadcn.com/docs/registry
 - https://github.com/shadcn-ui/ui
+
+## Agent delivery standard
+
+Apply this workflow to every non-trivial feature, integration, migration, or bug fix.
+
+### 1. Orient and define success
+
+- Read repository instructions and the relevant architecture before editing.
+- Identify the real user outcome, current behavior, constraints, affected systems, and risks.
+- Define observable acceptance criteria, including unhappy paths and regression boundaries.
+- Load any applicable specialized guidance before planning, such as shadcn, Supabase, security, payments, or framework-specific instructions.
+
+### 2. Plan before broad changes
+
+- Produce a short implementation plan covering files or layers, data flow, dependencies, validation, and rollback risk.
+- Ask the user only for decisions that materially change the solution; otherwise proceed with the safest reversible assumption.
+- For large or high-risk changes, inspect and present the expected diff or affected surface before applying it.
+- Do not mix unrelated refactors with the requested feature or fix.
+
+### 3. Build incrementally
+
+- Implement the smallest coherent vertical slice first.
+- Keep each patch focused and preserve existing functionality.
+- Validate after each logical slice instead of waiting until the end.
+- When a validation command fails, diagnose the actual error, fix it, and rerun the narrowest relevant check.
+- Do not hide failures with disabled tests, suppressed errors, fake success states, or silent fallbacks.
+
+### 4. Use real integration states
+
+- Once real data or an external integration is requested, do not silently substitute sample data, hardcoded success, fake accounts, or placeholder records.
+- Keep one clear source of truth for remote state.
+- Provide explicit loading, empty, error, unauthorized, and retry states.
+- Keep secrets on trusted server-side paths. Never expose service-role, admin, payment, or provider secrets in frontend code, logs, screenshots, fixtures, or chat.
+
+### 5. Verify the full story
+
+Before declaring completion:
+
+- run the relevant lint, typecheck, unit/integration tests, and production build available in the repository;
+- exercise the critical user flow from entry to result;
+- verify desktop and mobile behavior for interface changes;
+- inspect the rendered preview, not only compilation;
+- confirm errors and empty states are understandable;
+- report concrete verification evidence, changed files, remaining risks, and anything that still needs external configuration.
+
+### External reference boundary: 10x
+
+The repository https://github.com/10x-app-builder/10x may be consulted only for high-level, non-code workflow ideas because it is licensed under PolyForm Noncommercial 1.0.0.
+
+- Do not copy, adapt, translate, vendor, or derive code, prompts, assets, skills, schemas, or implementation details from it into commercial projects.
+- Do not add it as a dependency, submodule, template, registry, or code-generation source.
+- Independently implement any generally useful process idea using this project's own stack, requirements, and licensed dependencies.
