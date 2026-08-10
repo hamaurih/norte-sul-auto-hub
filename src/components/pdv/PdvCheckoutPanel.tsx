@@ -68,7 +68,7 @@ export function PdvCheckoutPanel({
     try {
       const result = await finishSale({ data: {
         cashSessionId: sessionId, idempotencyKey: crypto.randomUUID(),
-        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity, unit_price: item.unitPrice })),
+        items: items.map((item) => ({ product_id: item.id, quantity: item.quantity })),
         payments, discountAmount: 0,
       } });
       toast.success(`Venda concluída #${result.saleId.slice(0, 8)}`);
@@ -115,7 +115,11 @@ export function PdvCheckoutPanel({
       <Button className="w-full" size="lg" disabled={busy || items.length === 0 || Math.abs(paid-total) > 0.001} onClick={finalize}>
         {busy ? "Finalizando…" : "Concluir venda"}
       </Button>
-      <p className="text-center text-[11px] text-muted-foreground">A venda e a baixa do estoque são confirmadas juntas.</p>
+      <p className="text-center text-[11px] text-muted-foreground">Preço, venda e estoque são confirmados pelo servidor.</p>
+      <PdvCashControls sessionId={sessionId} busy={busy} onBusyChange={setBusy} onClosed={() => {
+        setSessionId(null);
+        setPayments([]);
+      }} />
     </div>
   );
 }
