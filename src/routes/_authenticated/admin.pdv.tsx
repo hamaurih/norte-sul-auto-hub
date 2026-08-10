@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useRef, useState } from "react";
 import {
   Barcode,
@@ -13,6 +14,8 @@ import {
   WalletCards,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { listPdvCatalog } from "@/lib/pos.functions";
+import { PdvCheckoutPanel } from "@/components/pdv/PdvCheckoutPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +48,7 @@ type Product = {
 
 type Warehouse = {
   id: string;
+  branch_id: string;
   name: string;
   code: string;
 };
@@ -64,24 +68,16 @@ function effectivePrice(product: Product) {
 
 function PdvPage() {
   const searchRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const catalogFn = useServerFn(listPdvCatalog);
   const [search, setSearch] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
 
   const productsQuery = useQuery({
-    queryKey: ["pdv-products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, sku, internal_code, name, price_b2c, sale_price_b2c, stock")
-        .eq("active", true)
-        .gt("stock", 0)
-        .order("name")
-        .limit(300);
-
-      if (error) throw error;
-      return (data ?? []) as Product[];
-    },
+    queryKey: ["pdv-products", warehouseId, search],
+    enabled: Boolean(warehouseId),
+    queryFn: () => catalogFn({ data: { warehouseId, search } }),
   });
 
   const warehousesQuery = useQuery({
@@ -89,7 +85,7 @@ function PdvPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouses")
-        .select("id, name, code")
+        .select("id, branch_id, name, code")
         .eq("active", true)
         .order("is_default", { ascending: false })
         .order("name");
@@ -100,16 +96,7 @@ function PdvPage() {
   });
 
   const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
-  const results = useMemo(() => {
-    if (!normalizedSearch) return [];
-    return (productsQuery.data ?? [])
-      .filter((product) =>
-        [product.name, product.sku, product.internal_code ?? ""].some((value) =>
-          value.toLocaleLowerCase("pt-BR").includes(normalizedSearch),
-        ),
-      )
-      .slice(0, 12);
-  }, [normalizedSearch, productsQuery.data]);
+  const results = useMemo(() => (productsQuery.data ?? []).slice(0, 12), [productsQuery.data]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -320,21 +307,17 @@ function PdvPage() {
                 <span>{money.format(subtotal)}</span>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-[auto_1fr] gap-2">
-              <Button variant="outline" size="lg" disabled={cart.length === 0}>
-                <Pause /> Aguardar
-              </Button>
-              <Button
-                size="lg"
-                disabled={cart.length === 0 || !warehouseId}
-                title={!warehouseId ? "Selecione o depósito" : undefined}
-              >
-                <WalletCards /> Ir para pagamento
-              </Button>
-            </div>
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              O pagamento permanecerá bloqueado até a transação de venda e estoque ser ligada ao backend.
-            </p>
+            <PdvCheckoutPanel
+              warehouse={(warehousesQuery.data ?? []).find((warehouse) => warehouse.id === warehouseId) ?? null}
+              items={cart}
+              total={subtotal}
+              onCompleted={() => {
+                setCart([]);
+                setSearch("");
+                queryClient.invalidateQueries({ queryKey: ["pdv-products"] });
+                requestAnimationFrame(() => searchRef.current?.focus());
+              }}
+            />
           </CardContent>
         </Card>
       </div>
