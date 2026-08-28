@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { tdb } from "@/integrations/supabase/tenant-db";
+import {
+  canViewModule,
+  defaultPermissionsForRole,
+  permissionMapFromRows,
+  type ModulePermission,
+  type PermissionMap,
+  type PermissionModuleKey,
+  type SystemRole,
+} from "@/lib/permissions";
 import type { Session, User } from "@supabase/supabase-js";
 
 export type CustomerGroup = "b2c" | "b2b_pendente" | "revendedor" | "oficina" | "distribuidor";
@@ -18,6 +28,10 @@ export interface SessionState {
   roles: AppRole[];
   customerGroup: CustomerGroup;
   b2bStatus: B2BStatus;
+  tenantId: string | null;
+  tenantRole: string | null;
+  permissions: PermissionMap;
+  canViewModule: (module: PermissionModuleKey) => boolean;
 }
 
 const empty: SessionState = {
@@ -32,6 +46,10 @@ const empty: SessionState = {
   roles: [],
   customerGroup: "b2c",
   b2bStatus: "none",
+  tenantId: null,
+  tenantRole: null,
+  permissions: defaultPermissionsForRole("consulta"),
+  canViewModule: () => false,
 };
 
 export function useSession(): SessionState {
@@ -45,16 +63,72 @@ export function useSession(): SessionState {
         if (!cancelled) setState({ ...empty, loading: false });
         return;
       }
-      const [{ data: rolesData }, { data: profile }] = await Promise.all([
+      const [{ data: rolesData }, { data: profile }, { data: accessContext }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", session.user.id),
-        supabase.from("profiles").select("customer_group, b2b_status").eq("id", session.user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("customer_group, b2b_status")
+          .eq("id", session.user.id)
+          .maybeSingle(),
+        tdb(supabase).rpc("my_access_context"),
       ]);
-      const roles = ((rolesData ?? []).map((r) => r.role) as AppRole[]);
+      const roles = (rolesData ?? []).map((r) => r.role) as AppRole[];
       const customerGroup = (profile?.customer_group ?? "b2c") as CustomerGroup;
       const b2bStatus = (profile?.b2b_status ?? "none") as B2BStatus;
-      const isStaff = roles.some((r) => r === "admin" || r === "gerente");
-      const isAdmin = roles.some((r) => r === "admin");
-      const isSalesRep = roles.some((r) => r === "vendedor");
+      const access = (accessContext ?? {}) as {
+        tenants?: Array<{ id: string; slug: string; role: string; status: string }>;
+      };
+      const tenant = (access.tenants ?? []).find(
+        (item) =>
+          item.slug ===
+            (typeof window !== "undefined"
+              ? window.localStorage.getItem("auto-deal-active-tenant")
+              : null) ||
+          item.slug === (import.meta.env.VITE_PUBLIC_TENANT_SLUG || "norte-sul-real"),
+      );
+      const tenantRole = tenant?.role ?? null;
+      const hasTenantMembership = Boolean(tenant);
+      const tenantAccessActive = tenant?.status === "active";
+      const tenantStaff = ["owner", "admin", "manager", "sales", "viewer"].includes(
+        tenantRole ?? "",
+      );
+      const legacyStaff = roles.some((r) => r === "admin" || r === "gerente");
+      const legacyAdmin = roles.some((r) => r === "admin");
+      const legacySalesRep = roles.some((r) => r === "vendedor");
+      const isStaff = hasTenantMembership ? tenantAccessActive && tenantStaff : legacyStaff;
+      const isAdmin = hasTenantMembership
+        ? tenantAccessActive && ["owner", "admin"].includes(tenantRole ?? "")
+        : legacyAdmin;
+      const isSalesRep = hasTenantMembership
+        ? tenantAccessActive && tenantRole === "sales"
+        : legacySalesRep;
+      const systemRole: SystemRole = hasTenantMembership
+        ? isAdmin
+          ? "admin"
+          : tenantRole === "manager"
+            ? "gerente"
+            : tenantRole === "sales"
+              ? "vendedor"
+              : "consulta"
+        : roles.includes("admin")
+          ? "admin"
+          : roles.includes("gerente")
+            ? "gerente"
+            : roles.includes("vendedor")
+              ? "vendedor"
+              : "consulta";
+      let permissions = defaultPermissionsForRole(systemRole);
+      if (tenant?.id) {
+        const { data: permissionRows } = await tdb(supabase)
+          .from("tenant_user_permissions")
+          .select("module_key, can_view, can_create, can_update, can_delete")
+          .eq("tenant_id", tenant.id)
+          .eq("user_id", session.user.id);
+        permissions = permissionMapFromRows(
+          systemRole,
+          (permissionRows ?? []) as ModulePermission[],
+        );
+      }
       const b2bGroup = ["revendedor", "oficina", "distribuidor"].includes(customerGroup);
       if (!cancelled)
         setState({
@@ -69,6 +143,10 @@ export function useSession(): SessionState {
           roles,
           customerGroup,
           b2bStatus,
+          tenantId: tenant?.id ?? null,
+          tenantRole,
+          permissions,
+          canViewModule: (module) => canViewModule(permissions, module),
         });
     }
 

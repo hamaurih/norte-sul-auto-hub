@@ -32,6 +32,7 @@ import { Route as AuthenticatedVendedorPedidoAssistidoRouteImport } from './rout
 import { Route as AuthenticatedVendedorMeusPedidosRouteImport } from './routes/_authenticated/vendedor.meus-pedidos'
 import { Route as AuthenticatedVendedorClientesRouteImport } from './routes/_authenticated/vendedor.clientes'
 import { Route as AuthenticatedAdminVendedoresRouteImport } from './routes/_authenticated/admin.vendedores'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
 import { Route as AuthenticatedAdminSaneamentoRouteImport } from './routes/_authenticated/admin.saneamento'
 import { Route as AuthenticatedAdminPromocoesRouteImport } from './routes/_authenticated/admin.promocoes'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
@@ -180,6 +181,12 @@ const AuthenticatedAdminVendedoresRoute =
   AuthenticatedAdminVendedoresRouteImport.update({
     id: '/vendedores',
     path: '/vendedores',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSaneamentoRoute =
@@ -385,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/saneamento': typeof AuthenticatedAdminSaneamentoRouteWithChildren
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -434,6 +442,7 @@ export interface FileRoutesByTo {
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/admin/saneamento': typeof AuthenticatedAdminSaneamentoRouteWithChildren
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -488,6 +497,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/promocoes': typeof AuthenticatedAdminPromocoesRoute
   '/_authenticated/admin/saneamento': typeof AuthenticatedAdminSaneamentoRouteWithChildren
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
   '/_authenticated/admin/vendedores': typeof AuthenticatedAdminVendedoresRouteWithChildren
   '/_authenticated/vendedor/clientes': typeof AuthenticatedVendedorClientesRoute
   '/_authenticated/vendedor/meus-pedidos': typeof AuthenticatedVendedorMeusPedidosRoute
@@ -542,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin/pedidos'
     | '/admin/promocoes'
     | '/admin/saneamento'
+    | '/admin/usuarios'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/admin/pedidos'
     | '/admin/promocoes'
     | '/admin/saneamento'
+    | '/admin/usuarios'
     | '/admin/vendedores'
     | '/vendedor/clientes'
     | '/vendedor/meus-pedidos'
@@ -644,6 +656,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/promocoes'
     | '/_authenticated/admin/saneamento'
+    | '/_authenticated/admin/usuarios'
     | '/_authenticated/admin/vendedores'
     | '/_authenticated/vendedor/clientes'
     | '/_authenticated/vendedor/meus-pedidos'
@@ -840,6 +853,13 @@ declare module '@tanstack/react-router' {
       path: '/vendedores'
       fullPath: '/admin/vendedores'
       preLoaderRoute: typeof AuthenticatedAdminVendedoresRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/saneamento': {
@@ -1111,6 +1131,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminPromocoesRoute: typeof AuthenticatedAdminPromocoesRoute
   AuthenticatedAdminSaneamentoRoute: typeof AuthenticatedAdminSaneamentoRouteWithChildren
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
   AuthenticatedAdminVendedoresRoute: typeof AuthenticatedAdminVendedoresRouteWithChildren
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminProdutosIdRoute: typeof AuthenticatedAdminProdutosIdRoute
@@ -1139,6 +1160,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPromocoesRoute: AuthenticatedAdminPromocoesRoute,
   AuthenticatedAdminSaneamentoRoute:
     AuthenticatedAdminSaneamentoRouteWithChildren,
+  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
   AuthenticatedAdminVendedoresRoute:
     AuthenticatedAdminVendedoresRouteWithChildren,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
